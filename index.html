@@ -671,34 +671,6 @@
             <input type="checkbox" id="sound-toggle" checked /> Sound On
         </label>
     </div>
-    <div id="help-modal" class="help-modal" role="dialog" aria-modal="true" aria-label="Game Instructions">
-        <div class="help-modal-content">
-            <button id="help-close" class="help-close" aria-label="Close">&times;</button>
-            <h2>How to Play</h2>
-            <p>Tap a state plate on the board to mark it. Get 5 in a row &mdash; horizontally, vertically, or diagonally &mdash; to win!</p>
-            <div class="help-game-type">
-                <h3>USA</h3>
-                <p>Play with all 50 states. Classic road-trip bingo.</p>
-            </div>
-            <div class="help-game-type">
-                <h3>East Coast</h3>
-                <p>Play with 16 East Coast &amp; Southeast states only. Faster games, regional challenge.</p>
-            </div>
-            <div class="help-game-type">
-                <h3>Kid Colors</h3>
-                <p>Play with 9 colorful states. Designed for younger players.</p>
-            </div>
-            <div class="help-game-type">
-                <h3>New Board</h3>
-                <p>Reshuffles and generates a fresh board for the current game type.</p>
-            </div>
-            <div class="help-game-type">
-                <h3>Free Pick</h3>
-                <p>Randomly marks one unmarked cell on the board automatically.</p>
-            </div>
-            <p class="help-footer">Tip: Road Watch mode auto-detects plates &mdash; no manual marking needed!</p>
-        </div>
-    </div>
 
     <div id="bingo-message" class="winning-message"></div>
 
@@ -1400,5 +1372,33 @@
       generateBoard(stateNames, GRID_USA);
     });
 </script>
+    <div id="help-modal" class="help-modal" role="dialog" aria-modal="true" aria-label="Game Instructions">
+        <div class="help-modal-content">
+            <button id="help-close" class="help-close" aria-label="Close">&times;</button>
+            <h2>How to Play</h2>
+            <p>Tap a state plate on the board to mark it. Get 5 in a row &mdash; horizontally, vertically, or diagonally &mdash; to win!</p>
+            <div class="help-game-type">
+                <h3>USA</h3>
+                <p>Play with all 50 states. Classic road-trip bingo.</p>
+            </div>
+            <div class="help-game-type">
+                <h3>East Coast</h3>
+                <p>Play with 16 East Coast &amp; Southeast states only. Faster games, regional challenge.</p>
+            </div>
+            <div class="help-game-type">
+                <h3>Kid Colors</h3>
+                <p>Play with 9 colorful states. Designed for younger players.</p>
+            </div>
+            <div class="help-game-type">
+                <h3>New Board</h3>
+                <p>Reshuffles and generates a fresh board for the current game type.</p>
+            </div>
+            <div class="help-game-type">
+                <h3>Free Pick</h3>
+                <p>Randomly marks one unmarked cell on the board automatically.</p>
+            </div>
+            <p class="help-footer">Tip: Road Watch mode auto-detects plates &mdash; no manual marking needed!</p>
+        </div>
+    </div>
 </body>
 </html>
