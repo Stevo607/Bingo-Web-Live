@@ -668,7 +668,10 @@
         <button id="help-btn" class="help-btn" aria-label="Help">?</button>
         <div id="score">Score: 0</div>
         <label for="sound-toggle">
-            <input type="checkbox" id="sound-toggle" checked /> Sound On
+            <input type="checkbox" id="sound-toggle" checked /> Sound
+        </label>
+        <label for="music-toggle">
+            <input type="checkbox" id="music-toggle" checked /> Music
         </label>
     </div>
 
@@ -785,12 +788,13 @@
       const clickAudio = document.getElementById('click-audio');
       const zonkAudio = document.getElementById('zonk-audio');
       const alreadyMarkedAudio = document.getElementById('already-marked-audio');
+      const musicToggle = document.getElementById('music-toggle');
       const roadMusicAudio = document.getElementById('road-music-audio');
       const confettiCanvas = document.getElementById('confetti-canvas');
       const freePickButton = document.getElementById('free-pick');
 
       function syncRoadMusicState() {
-        const shouldPlay = soundToggle.checked && roadWatchRunning && !currentIsColorGame;
+        const shouldPlay = musicToggle.checked && roadWatchRunning && !currentIsColorGame;
         roadMusicAudio.volume = 0.22;
         if (shouldPlay) {
           roadMusicAudio.currentTime = roadMusicAudio.currentTime || 0;
@@ -1349,6 +1353,10 @@
         }
       });
       soundToggle.addEventListener('change', () => {
+        // Sound effects use soundToggle; music uses musicToggle
+      });
+
+      musicToggle.addEventListener('change', () => {
         syncRoadMusicState();
       });
 
@@ -1402,4 +1410,3 @@
     </div>
 </body>
 </html>
-<!-- updated Wed Apr 22 21:55:14 EDT 2026 -->
