@@ -724,7 +724,10 @@
         <button id="help-btn" class="help-btn" aria-label="Help">?</button>
         <div id="score">Score: 0</div>
         <label for="sound-toggle">
-            <input type="checkbox" id="sound-toggle" checked /> Sound On
+            <input type="checkbox" id="sound-toggle" checked /> Sound
+        </label>
+        <label for="music-toggle">
+            <input type="checkbox" id="music-toggle" checked /> Music
         </label>
     </div>
 
@@ -835,6 +838,7 @@
 
       const scoreEl = document.getElementById('score');
       const soundToggle = document.getElementById('sound-toggle');
+      const musicToggle = document.getElementById('music-toggle');
       const bingoBoardEl = document.getElementById('bingo-board');
       const bingoMessageEl = document.getElementById('bingo-message');
       const bingoAudio = document.getElementById('bingo-audio');
@@ -846,7 +850,7 @@
       const freePickButton = document.getElementById('free-pick');
 
       function syncRoadMusicState() {
-        const shouldPlay = soundToggle.checked && roadWatchRunning && !currentIsColorGame;
+        const shouldPlay = musicToggle.checked && roadWatchRunning && !currentIsColorGame;
         roadMusicAudio.volume = 0.22;
         if (shouldPlay) {
           roadMusicAudio.currentTime = roadMusicAudio.currentTime || 0;
@@ -1405,6 +1409,9 @@
         }
       });
       soundToggle.addEventListener('change', () => {
+        syncRoadMusicState();
+      });
+      musicToggle.addEventListener('change', () => {
         syncRoadMusicState();
       });
 
