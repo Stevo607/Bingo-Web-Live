@@ -651,6 +651,62 @@
         @media (max-width: 380px) {
             .help-btn { width: 26px; height: 26px; font-size: 0.9em; }
         }
+        .help-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(29,53,87,0.12);
+        }
+        .help-tab {
+            flex: 1;
+            padding: 9px 8px;
+            border: none;
+            background: #edf0f7;
+            color: #59708d;
+            font-size: 0.82em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .help-tab.active {
+            background: #1d3557;
+            color: white;
+        }
+        .help-tab:not(.active):hover {
+            background: #dde3ec;
+        }
+        .help-tab-content {
+            display: none;
+        }
+        .help-tab-content.active {
+            display: block;
+        }
+        .help-section {
+            margin-bottom: 14px;
+        }
+        .help-section h3 {
+            font-size: 0.88em;
+            color: #1d3557;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e8ecf2;
+        }
+        .help-game-type {
+            margin-bottom: 10px;
+        }
+        .help-game-type h4 {
+            font-size: 0.86em;
+            color: #243447;
+            margin-bottom: 2px;
+        }
+        .help-game-type p {
+            font-size: 0.82em;
+            color: #59708d;
+            margin-bottom: 0;
+            line-height: 1.45;
+        }
         @media (min-width: 681px) {
             .help-modal-content { max-width: 480px; }
         }
@@ -668,10 +724,7 @@
         <button id="help-btn" class="help-btn" aria-label="Help">?</button>
         <div id="score">Score: 0</div>
         <label for="sound-toggle">
-            <input type="checkbox" id="sound-toggle" checked /> Sound
-        </label>
-        <label for="music-toggle">
-            <input type="checkbox" id="music-toggle" checked /> Music
+            <input type="checkbox" id="sound-toggle" checked /> Sound On
         </label>
     </div>
 
@@ -788,13 +841,12 @@
       const clickAudio = document.getElementById('click-audio');
       const zonkAudio = document.getElementById('zonk-audio');
       const alreadyMarkedAudio = document.getElementById('already-marked-audio');
-      const musicToggle = document.getElementById('music-toggle');
       const roadMusicAudio = document.getElementById('road-music-audio');
       const confettiCanvas = document.getElementById('confetti-canvas');
       const freePickButton = document.getElementById('free-pick');
 
       function syncRoadMusicState() {
-        const shouldPlay = musicToggle.checked && roadWatchRunning && !currentIsColorGame;
+        const shouldPlay = soundToggle.checked && roadWatchRunning && !currentIsColorGame;
         roadMusicAudio.volume = 0.22;
         if (shouldPlay) {
           roadMusicAudio.currentTime = roadMusicAudio.currentTime || 0;
@@ -1353,10 +1405,6 @@
         }
       });
       soundToggle.addEventListener('change', () => {
-        // Sound effects use soundToggle; music uses musicToggle
-      });
-
-      musicToggle.addEventListener('change', () => {
         syncRoadMusicState();
       });
 
@@ -1364,6 +1412,8 @@
       const helpBtn = document.getElementById('help-btn');
       const helpModal = document.getElementById('help-modal');
       const helpClose = document.getElementById('help-close');
+      const helpTabs = document.querySelectorAll('.help-tab');
+      const helpTabContents = document.querySelectorAll('.help-tab-content');
 
       function openHelp() { helpModal.classList.add('show'); }
       function closeHelp() { helpModal.classList.remove('show'); }
@@ -1371,6 +1421,15 @@
       helpBtn.addEventListener('click', openHelp);
       helpClose.addEventListener('click', closeHelp);
       helpModal.addEventListener('click', (e) => { if (e.target === helpModal) closeHelp(); });
+
+      helpTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          helpTabs.forEach(t => t.classList.remove('active'));
+          helpTabContents.forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+      });
 
       createRoadCars();
       updateRoadWatchButton();
@@ -1384,28 +1443,68 @@
         <div class="help-modal-content">
             <button id="help-close" class="help-close" aria-label="Close">&times;</button>
             <h2>How to Play</h2>
-            <p>Tap a state plate on the board to mark it. Get 5 in a row &mdash; horizontally, vertically, or diagonally &mdash; to win!</p>
-            <div class="help-game-type">
-                <h3>USA</h3>
-                <p>Play with all 50 states. Classic road-trip bingo.</p>
+            <div class="help-tabs">
+                <button class="help-tab active" data-tab="classic">Classic Board</button>
+                <button class="help-tab" data-tab="roadwatch">Road Watch</button>
             </div>
-            <div class="help-game-type">
-                <h3>East Coast</h3>
-                <p>Play with 16 East Coast &amp; Southeast states only. Faster games, regional challenge.</p>
+            <div class="help-tab-content active" id="tab-classic">
+                <p>Mark the state plates you spot. Get 5 in a row &mdash; horizontally, vertically, or diagonally &mdash; to win!</p>
+                <div class="help-section">
+                    <h3>Game Modes</h3>
+                    <div class="help-game-type">
+                        <h4>USA</h4>
+                        <p>All 50 states. Classic road-trip bingo.</p>
+                    </div>
+                    <div class="help-game-type">
+                        <h4>East Coast</h4>
+                        <p>16 East Coast &amp; Southeast states only. Faster games, regional challenge.</p>
+                    </div>
+                    <div class="help-game-type">
+                        <h4>Kid Colors</h4>
+                        <p>9 colorful states for younger players.</p>
+                    </div>
+                </div>
+                <div class="help-section">
+                    <h3>Board Controls</h3>
+                    <div class="help-game-type">
+                        <h4>New Board</h4>
+                        <p>Reshuffles and generates a fresh board for the current game type.</p>
+                    </div>
+                    <div class="help-game-type">
+                        <h4>Free Pick</h4>
+                        <p>Randomly marks one unmarked cell automatically. Use as many times as you want!</p>
+                    </div>
+                </div>
             </div>
-            <div class="help-game-type">
-                <h3>Kid Colors</h3>
-                <p>Play with 9 colorful states. Designed for younger players.</p>
+            <div class="help-tab-content" id="tab-roadwatch">
+                <p>Road Watch brings the road to you! Animated cars drive across the screen &mdash; when a car's plate matches a state on your board, it's automatically marked for you.</p>
+                <div class="help-section">
+                    <h3>How It Works</h3>
+                    <div class="help-game-type">
+                        <h4>Start</h4>
+                        <p>Tap the blue Start button in the Road Watch panel. Cars begin driving and plates appear above them.</p>
+                    </div>
+                    <div class="help-game-type">
+                        <h4>Auto-Mark</h4>
+                        <p>When a car shows a state that's on your board, it's automatically marked. No tapping needed!</p>
+                    </div>
+                    <div class="help-game-type">
+                        <h4>Stop</h4>
+                        <p>Tap Stop to end Road Watch mode. You can start it again anytime.</p>
+                    </div>
+                </div>
+                <div class="help-section">
+                    <h3>Tips</h3>
+                    <div class="help-game-type">
+                        <h4>Music</h4>
+                        <p>Toggle the Music checkbox to control background road music independently from sound effects.</p>
+                    </div>
+                    <div class="help-game-type">
+                        <h4>Board Synced</h4>
+                        <p>Road Watch marks cells on whatever board you currently have loaded (USA, East Coast, or Kid Colors).</p>
+                    </div>
+                </div>
             </div>
-            <div class="help-game-type">
-                <h3>New Board</h3>
-                <p>Reshuffles and generates a fresh board for the current game type.</p>
-            </div>
-            <div class="help-game-type">
-                <h3>Free Pick</h3>
-                <p>Randomly marks one unmarked cell on the board automatically.</p>
-            </div>
-            <p class="help-footer">Tip: Road Watch mode auto-detects plates &mdash; no manual marking needed!</p>
         </div>
     </div>
 </body>
