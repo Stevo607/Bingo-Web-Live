@@ -557,160 +557,130 @@
         .pattern-PERIMETER { outline: 3px solid green; outline-offset: -1px; }
         .pattern-COVER-ALL { outline: 3px solid black; outline-offset: -1px; }
 
-        @media (min-width: 480px) {
-          h1 { font-size: 1.8em; }
-          .game-button { font-size: 1em; padding: 13px 20px; }
-          .help-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 2px solid #1d3557;
-            background: #1d3557;
-            color: white;
-            font-size: 1em;
-            font-weight: 800;
-            cursor: pointer;
-            flex-shrink: 0;
-            line-height: 1;
-            padding: 0;
-            transition: background-color 0.2s;
+        .help-btn {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          border: 2px solid #1d3557;
+          background: #1d3557;
+          color: white;
+          font-size: 1em;
+          font-weight: 800;
+          cursor: pointer;
+          flex-shrink: 0;
+          line-height: 1;
+          padding: 0;
+          transition: background-color 0.2s, transform 0.2s;
         }
         .help-btn:hover { background-color: #355070; }
         .help-btn:active { transform: scale(0.95); }
         .help-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(29,53,87,0.72);
-            z-index: 999;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(29,53,87,0.72);
+          z-index: 999;
+          justify-content: center;
+          align-items: center;
+          padding: 16px;
         }
         .help-modal.show { display: flex; }
         .help-modal-content {
-            background: #fffdf1;
-            border-radius: 20px;
-            padding: 24px 20px 20px;
-            max-width: 400px;
-            width: 100%;
-            position: relative;
-            box-shadow: 0 12px 40px rgba(29,53,87,0.28);
-            text-align: left;
-            max-height: 85vh;
-            overflow-y: auto;
+          background: #fffdf1;
+          border-radius: 20px;
+          padding: 24px 20px 20px;
+          max-width: 400px;
+          width: 100%;
+          position: relative;
+          box-shadow: 0 12px 40px rgba(29,53,87,0.28);
+          text-align: left;
+          max-height: 85vh;
+          overflow-y: auto;
         }
         .help-modal-content h2 {
-            font-size: 1.2em;
-            color: #1d3557;
-            margin-bottom: 10px;
+          font-size: 1.2em;
+          color: #1d3557;
+          margin-bottom: 10px;
         }
         .help-modal-content p {
-            font-size: 0.88em;
-            color: #4a5568;
-            margin-bottom: 14px;
-            line-height: 1.5;
-        }
-        .help-game-type {
-            margin-bottom: 12px;
-        }
-        .help-game-type h3 {
-            font-size: 0.92em;
-            color: #243447;
-            margin-bottom: 3px;
-        }
-        .help-game-type p {
-            font-size: 0.84em;
-            color: #59708d;
-            margin-bottom: 0;
+          font-size: 0.88em;
+          color: #4a5568;
+          margin-bottom: 14px;
+          line-height: 1.5;
         }
         .help-close {
-            position: absolute;
-            top: 10px;
-            right: 14px;
-            background: none;
-            border: none;
-            font-size: 1.6em;
-            color: #9ca3af;
-            cursor: pointer;
-            line-height: 1;
+          position: absolute;
+          top: 10px;
+          right: 14px;
+          background: none;
+          border: none;
+          font-size: 1.6em;
+          color: #9ca3af;
+          cursor: pointer;
+          line-height: 1;
         }
         .help-close:hover { color: #1d3557; }
-        .help-footer {
-            font-size: 0.82em !important;
-            color: #2a9d8f !important;
-            font-weight: 600;
-            margin-top: 16px !important;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 10px;
-        }
-        @media (max-width: 480px) {
-            .help-modal-content { padding: 20px 16px 16px; }
-            .help-modal-content h2 { font-size: 1.1em; }
-        }
-        @media (max-width: 380px) {
-            .help-btn { width: 26px; height: 26px; font-size: 0.9em; }
-        }
         .help-tabs {
-            display: flex;
-            gap: 0;
-            margin-bottom: 16px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 14px rgba(29,53,87,0.12);
+          display: flex;
+          gap: 0;
+          margin-bottom: 16px;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 14px rgba(29,53,87,0.12);
         }
         .help-tab {
-            flex: 1;
-            padding: 9px 8px;
-            border: none;
-            background: #edf0f7;
-            color: #59708d;
-            font-size: 0.82em;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background-color 0.2s, color 0.2s;
+          flex: 1;
+          padding: 9px 8px;
+          border: none;
+          background: #edf0f7;
+          color: #59708d;
+          font-size: 0.82em;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background-color 0.2s, color 0.2s;
         }
         .help-tab.active {
-            background: #1d3557;
-            color: white;
+          background: #1d3557;
+          color: white;
         }
-        .help-tab:not(.active):hover {
-            background: #dde3ec;
-        }
-        .help-tab-content {
-            display: none;
-        }
-        .help-tab-content.active {
-            display: block;
-        }
-        .help-section {
-            margin-bottom: 14px;
-        }
+        .help-tab:not(.active):hover { background: #dde3ec; }
+        .help-tab-content { display: none; }
+        .help-tab-content.active { display: block; }
+        .help-section { margin-bottom: 14px; }
         .help-section h3 {
-            font-size: 0.88em;
-            color: #1d3557;
-            margin-bottom: 8px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #e8ecf2;
+          font-size: 0.88em;
+          color: #1d3557;
+          margin-bottom: 8px;
+          padding-bottom: 5px;
+          border-bottom: 1px solid #e8ecf2;
         }
-        .help-game-type {
-            margin-bottom: 10px;
-        }
+        .help-game-type { margin-bottom: 10px; }
         .help-game-type h4 {
-            font-size: 0.86em;
-            color: #243447;
-            margin-bottom: 2px;
+          font-size: 0.86em;
+          color: #243447;
+          margin-bottom: 2px;
         }
         .help-game-type p {
-            font-size: 0.82em;
-            color: #59708d;
-            margin-bottom: 0;
-            line-height: 1.45;
+          font-size: 0.82em;
+          color: #59708d;
+          margin-bottom: 0;
+          line-height: 1.45;
+        }
+        @media (max-width: 480px) {
+          .help-modal-content { padding: 20px 16px 16px; }
+          .help-modal-content h2 { font-size: 1.1em; }
+        }
+        @media (max-width: 380px) {
+          .help-btn { width: 26px; height: 26px; font-size: 0.9em; }
         }
         @media (min-width: 681px) {
-            .help-modal-content { max-width: 480px; }
+          .help-modal-content { max-width: 480px; }
         }
-        #bingo-board { gap: 8px; }
+
+        @media (min-width: 480px) {
+          h1 { font-size: 1.8em; }
+          .game-button { font-size: 1em; padding: 13px 20px; }
+          #bingo-board { gap: 8px; }
           .bingo-cell { font-size: 0.8em; }
           #bingo-message { font-size: 1.1em; }
           .road-scene { height: 124px; }
@@ -1450,106 +1420,118 @@
         <div class="help-modal-content">
             <button id="help-close" class="help-close" aria-label="Close">&times;</button>
             <h2>How to Play</h2>
+            <p>Choose the help tab for the way you want to play: classic road-trip Bingo, or Road Watch &mdash; the computer-driven version.</p>
             <div class="help-tabs">
                 <button class="help-tab active" data-tab="classic">Classic Board</button>
                 <button class="help-tab" data-tab="roadwatch">Road Watch</button>
             </div>
             <div class="help-tab-content active" id="tab-classic">
-                <p>Designed for passengers traveling in a car &mdash; a digital version of the classic cardboard bingo card.</p>
+                <p>Classic Board is the traditional license plate hunt: watch real traffic, tap what you spot, and race to complete a winning pattern.</p>
                 <div class="help-section">
-                    <h3>Objective</h3>
+                    <h3>Goal</h3>
                     <div class="help-game-type">
-                        <p>Be the first to complete a winning pattern by spotting license plates on the real road around you.</p>
+                        <h4>Complete a Pattern</h4>
+                        <p>Mark states as you see their plates. Score when you complete a straight line, diagonal, Four Corners, Stamp, T, Perimeter, or Cover All.</p>
                     </div>
                 </div>
                 <div class="help-section">
-                    <h3>How to Play</h3>
+                    <h3>Playing the Board</h3>
                     <div class="help-game-type">
-                        <h4>Keep Watch</h4>
-                        <p>Look out the window at passing cars, vehicles you pass, or cars in rest area parking lots.</p>
+                        <h4>Spot a Plate</h4>
+                        <p>Look for license plates on cars around you: passing traffic, parking lots, rest stops, or cars you pass on the road.</p>
                     </div>
                     <div class="help-game-type">
-                        <h4>Manual Entry</h4>
-                        <p>When you see a license plate from a state on your board, tap the corresponding square to mark it off.</p>
+                        <h4>Tap to Mark</h4>
+                        <p>When you spot a state that appears on your board, tap that square. Tap it again if you marked it by mistake.</p>
                     </div>
                     <div class="help-game-type">
-                        <h4>Winning Patterns</h4>
-                        <p>Win by completing a straight line (horizontal, vertical, or diagonal), Four Corners, or a full "Cover All" blackout.</p>
+                        <h4>Free Play Center</h4>
+                        <p>On the larger state boards, the center Free Play space starts marked automatically and counts toward every pattern it touches.</p>
                     </div>
                     <div class="help-game-type">
                         <h4>Free Pick</h4>
-                        <p>Stuck? Use the Free Pick button to randomly mark one tricky state. Use it as many times as you need!</p>
+                        <p>Need help with a hard-to-find state? Free Pick randomly marks one open state for you. In Classic Board, you can use it as often as you want.</p>
                     </div>
                 </div>
                 <div class="help-section">
-                    <h3>Game Modes</h3>
+                    <h3>Game Choices</h3>
                     <div class="help-game-type">
                         <h4>USA</h4>
-                        <p>All 50 states. Classic road-trip bingo.</p>
+                        <p>A full 50-state road-trip challenge using a 5-by-5 board.</p>
                     </div>
                     <div class="help-game-type">
                         <h4>East Coast</h4>
-                        <p>16 East Coast &amp; Southeast states only. Faster games, regional challenge.</p>
+                        <p>A faster regional game with East Coast and Southeast states.</p>
                     </div>
                     <div class="help-game-type">
                         <h4>Kid Colors</h4>
-                        <p>9 colorful states for younger players.</p>
+                        <p>A simpler color-matching board for younger players. Road Watch and Free Pick are for license plate games only.</p>
                     </div>
                 </div>
                 <div class="help-section">
-                    <h3>Board Controls</h3>
+                    <h3>Controls &amp; Sound</h3>
                     <div class="help-game-type">
                         <h4>New Board</h4>
-                        <p>Reshuffles and generates a fresh board for the current game type.</p>
+                        <p>Creates a fresh shuffled board for the current game type. Your current marks and score reset for the new board.</p>
                     </div>
                     <div class="help-game-type">
-                        <h4>Free Pick</h4>
-                        <p>Randomly marks one unmarked cell automatically. Use as many times as you want!</p>
+                        <h4>Sound</h4>
+                        <p>The Sound checkbox controls taps, Free Pick sounds, and win effects. It does not control Road Watch background music.</p>
                     </div>
                 </div>
             </div>
             <div class="help-tab-content" id="tab-roadwatch">
-                <p>Road Watch brings the road to you! Also known as "Play the Computer" &mdash; enjoy the thrill of the hunt even when you're not in a car.</p>
+                <p>Road Watch, also called "Play the Computer," creates a virtual highway so you can play even when you are not riding in a car.</p>
                 <div class="help-section">
-                    <h3>Objective</h3>
+                    <h3>Goal</h3>
                     <div class="help-game-type">
-                        <p>Monitor the virtual highway and claim states as cars drive past your screen. Win by completing your chosen bingo pattern.</p>
+                        <h4>React to the Traffic</h4>
+                        <p>Start Road Watch, watch the animated cars, and claim the states that appear before they disappear. You are still trying to complete the same winning patterns as Classic Board.</p>
                     </div>
                 </div>
                 <div class="help-section">
-                    <h3>How It Works</h3>
+                    <h3>How Road Watch Works</h3>
                     <div class="help-game-type">
-                        <h4>Watch the Traffic</h4>
-                        <p>Instead of looking out a real window, watch the animated road on your screen. Cars periodically drive by displaying various state license plates.</p>
+                        <h4>Start the Computer</h4>
+                        <p>Choose USA or East Coast, then tap Start in the Road Watch panel. Kid Colors does not use Road Watch.</p>
                     </div>
                     <div class="help-game-type">
-                        <h4>Speed &amp; Detection</h4>
-                        <p>Be quick! As a car enters the frame, identify its state.</p>
+                        <h4>Watch for the Active Car</h4>
+                        <p>Every few seconds, one car reveals a license plate and state name. The status line tells you what was spotted.</p>
                     </div>
                     <div class="help-game-type">
-                        <h4>Auto-Highlight</h4>
-                        <p>When a car shows a state that's on your board, the matching cell on your board lights up. Tap the highlighted cell (or tap the car itself) to claim it.</p>
+                        <h4>Claim the State</h4>
+                        <p>If that state is on your board, the matching square glows gold. Tap the glowing board square, or tap the revealed car, to mark it.</p>
                     </div>
                     <div class="help-game-type">
-                        <h4>Tap to Reveal</h4>
-                        <p>Tap any car as it drives by to reveal its full state name above the plate.</p>
+                        <h4>Misses &amp; Already Marked States</h4>
+                        <p>If the computer shows a state you cannot claim, the status line warns you. Tapping a state you already marked plays a different sound and leaves the board unchanged.</p>
                     </div>
                 </div>
                 <div class="help-section">
-                    <h3>Controls</h3>
+                    <h3>Road Watch Rules</h3>
                     <div class="help-game-type">
-                        <h4>Start / Stop</h4>
-                        <p>Tap the blue Start button to begin. Tap Stop to end Road Watch mode. You can start again anytime.</p>
+                        <h4>No Manual Hunting</h4>
+                        <p>While Road Watch is running, normal board tapping is locked. You can only tap the current glowing target, the active car, or use a Free Pick.</p>
+                    </div>
+                    <div class="help-game-type">
+                        <h4>Three Free Picks</h4>
+                        <p>In Road Watch, Free Pick is limited to 3 uses. The button shows how many are left, then disables when you run out.</p>
+                    </div>
+                    <div class="help-game-type">
+                        <h4>Stop Anytime</h4>
+                        <p>Tap Stop to pause the computer, clear the active target, restore normal board tapping, and reset the Free Pick button.</p>
+                    </div>
+                </div>
+                <div class="help-section">
+                    <h3>Sound &amp; Music</h3>
+                    <div class="help-game-type">
+                        <h4>Sound</h4>
+                        <p>Controls clicks, win effects, Free Pick, wrong-tap, and already-marked sounds.</p>
                     </div>
                     <div class="help-game-type">
                         <h4>Music</h4>
-                        <p>Toggle the Music checkbox to control background road music independently from sound effects.</p>
-                    </div>
-                </div>
-                <div class="help-section">
-                    <h3>Board Synced</h3>
-                    <div class="help-game-type">
-                        <p>Road Watch marks cells on whatever board you currently have loaded (USA, East Coast, or Kid Colors).</p>
+                        <p>Controls only the Road Watch background music. Music plays while Road Watch is running and stops when Road Watch stops.</p>
                     </div>
                 </div>
             </div>
