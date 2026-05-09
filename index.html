@@ -746,9 +746,9 @@
 
 <canvas id="confetti-canvas" class="confetti"></canvas>
 <audio id="bingo-audio" src="bingo_winner.mp3" preload="auto"></audio>
-<audio id="click-audio" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
-<audio id="zonk-audio" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-<audio id="already-marked-audio" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+<audio id="click-audio" preload="auto" src="audio/wood_plank_flicks.ogg"></audio>
+<audio id="zonk-audio" preload="auto" src="audio/clang_and_wobble.ogg"></audio>
+<audio id="already-marked-audio" preload="auto" src="audio/pop.ogg"></audio>
 <audio id="road-music-audio" preload="auto" loop src="roadwatch-music.wav"></audio>
 
 <script>
@@ -829,6 +829,22 @@
           roadMusicAudio.pause();
           roadMusicAudio.currentTime = 0;
         }
+      }
+
+      function playSoundEffect(audioEl, volume = 0.5) {
+        if (!soundToggle.checked || !audioEl) return;
+        audioEl.pause();
+        audioEl.currentTime = 0;
+        audioEl.volume = volume;
+        audioEl.play().catch(() => {});
+      }
+
+      function stopSoundEffects() {
+        [bingoAudio, clickAudio, zonkAudio, alreadyMarkedAudio].forEach(audioEl => {
+          if (!audioEl) return;
+          audioEl.pause();
+          audioEl.currentTime = 0;
+        });
       }
 
       function updateFreePickButton() {
@@ -956,10 +972,7 @@
         const stateAbbr = car.dataset.stateAbbr;
         const cell = document.querySelector(`#bingo-board .bingo-cell[data-item="${stateAbbr}"]`);
         if (cell && cell.classList.contains('marked')) {
-          alreadyMarkedAudio.pause();
-          alreadyMarkedAudio.currentTime = 0;
-          alreadyMarkedAudio.volume = 0.55;
-          alreadyMarkedAudio.play().catch(() => {});
+          playSoundEffect(alreadyMarkedAudio, 0.55);
           updateRoadWatchStatus(`${car.dataset.stateName || 'That state'} was already marked`, 'default');
           return;
         }
@@ -968,10 +981,7 @@
           car.classList.add('mark-success');
           setTimeout(() => car.classList.remove('mark-success'), 450);
         } else {
-          zonkAudio.pause();
-          zonkAudio.currentTime = 0;
-          zonkAudio.volume = 0.5;
-          zonkAudio.play().catch(() => {});
+          playSoundEffect(zonkAudio, 0.5);
           updateRoadWatchStatus(`${car.dataset.stateName || 'That state'} is not on this board`, 'alert');
         }
       }
@@ -1190,11 +1200,7 @@
         bingoMessageEl.classList.toggle('has-message', allAchievedPatternNames.length > 0);
 
         if (scoredThisCheck) {
-          if (soundToggle.checked) {
-            bingoAudio.pause();
-            bingoAudio.currentTime = 0;
-            bingoAudio.play().catch(e => console.error("Error playing bingo sound:", e));
-          }
+          playSoundEffect(bingoAudio, 1.0);
           startConfetti(confettiCanvas);
           setTimeout(() => stopConfetti(confettiCanvas), 3000);
         }
@@ -1283,12 +1289,7 @@
                   cell.classList.remove('free-pick-marked');
                 }
 
-                if (soundToggle.checked) {
-                  clickAudio.pause();
-                  clickAudio.currentTime = 0;
-                  clickAudio.volume = 0.5;
-                  clickAudio.play().catch(e => console.error("Error playing click sound:", e));
-                }
+                playSoundEffect(clickAudio, 0.5);
                 checkBingo();
               });
             }
@@ -1379,7 +1380,9 @@
         }
       });
       soundToggle.addEventListener('change', () => {
-        syncRoadMusicState();
+        if (!soundToggle.checked) {
+          stopSoundEffects();
+        }
       });
       musicToggle.addEventListener('change', () => {
         syncRoadMusicState();

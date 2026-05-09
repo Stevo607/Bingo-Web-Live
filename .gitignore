@@ -1,0 +1,8 @@
+# Local backups / archives
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# macOS
+.DS_Store
