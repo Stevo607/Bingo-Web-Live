@@ -778,6 +778,7 @@
       const GRID_USA = 5, GRID_KIDS = 4;
       let score = 0;
       let achievedPatterns = new Set();
+      let achievedPatternKeys = new Set();
       let currentIsColorGame = false;
       let currentGridSize = GRID_USA;
       let currentBoardLookup = {};
@@ -1081,6 +1082,7 @@
       function resetGameState() {
         score = 0;
         achievedPatterns.clear();
+        achievedPatternKeys.clear();
         scoreEl.textContent = `Score: ${score}`;
         bingoMessageEl.style.display = '';
         bingoMessageEl.textContent = '';
@@ -1103,10 +1105,11 @@
         stopConfetti(confettiCanvas);
       }
 
-      function updateScore(patternName) {
+      function updateScore(patternName, patternKey = patternName) {
         if (patternPoints[patternName] !== undefined) {
             score += patternPoints[patternName];
             achievedPatterns.add(patternName);
+            achievedPatternKeys.add(patternKey);
             scoreEl.textContent = `Score: ${score}`;
             return true;
         }
@@ -1184,14 +1187,16 @@
         let scoredThisCheck = false;
 
         Object.keys(patternPoints).forEach(patternName => {
-          if (achievedPatterns.has(patternName)) return;
-
           if (currentPatterns[patternName] && currentPatterns[patternName].length > 0) {
-            if (currentPatterns[patternName].some(line => line.every(index => index < fullBoardState.length && fullBoardState[index]))) {
-              if (updateScore(patternName)) {
-                  scoredThisCheck = true;
+            currentPatterns[patternName].forEach((line, lineIndex) => {
+              const patternKey = `${patternName}:${lineIndex}`;
+              if (achievedPatternKeys.has(patternKey)) return;
+              if (line.every(index => index < fullBoardState.length && fullBoardState[index])) {
+                if (updateScore(patternName, patternKey)) {
+                    scoredThisCheck = true;
+                }
               }
-            }
+            });
           }
         });
 
