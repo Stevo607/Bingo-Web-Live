@@ -1206,20 +1206,19 @@
         const patternTypesAchievedBeforeCheck = new Set(achievedPatterns);
 
         Object.keys(patternPoints).forEach(patternName => {
+          if (achievedPatterns.has(patternName)) return;
+
           if (currentPatterns[patternName] && currentPatterns[patternName].length > 0) {
-            currentPatterns[patternName].forEach((line, lineIndex) => {
-              const patternKey = `${patternName}:${lineIndex}`;
-              if (achievedPatternKeys.has(patternKey)) return;
-              if (line.every(index => index < fullBoardState.length && fullBoardState[index])) {
-                if (updateScore(patternName, patternKey)) {
-                    scoredThisCheck = true;
-                    if (!patternTypesAchievedBeforeCheck.has(patternName)) {
-                      newWinningPatternTypes.push(patternName);
-                      patternTypesAchievedBeforeCheck.add(patternName);
-                    }
-                }
+            const completed = currentPatterns[patternName].some(line =>
+              line.every(index => index < fullBoardState.length && fullBoardState[index])
+            );
+            if (completed && updateScore(patternName)) {
+              scoredThisCheck = true;
+              if (!patternTypesAchievedBeforeCheck.has(patternName)) {
+                newWinningPatternTypes.push(patternName);
+                patternTypesAchievedBeforeCheck.add(patternName);
               }
-            });
+            }
           }
         });
 
