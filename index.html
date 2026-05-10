@@ -1180,7 +1180,7 @@
         if (allVisualCells.length !== currentGridSize * currentGridSize && allVisualCells.length > 0) {
             console.warn("Visual cell count for checkBingo mismatch. Expected:", currentGridSize * currentGridSize, "Found:", allVisualCells.length);
         }
-        if (allVisualCells.length === 0) return;
+        if (allVisualCells.length === 0) return false;
 
 
         const currentPatterns = getPatternDefinitions(currentGridSize);
@@ -1228,6 +1228,7 @@
             });
           }
         });
+        return scoredThisCheck;
       }
 
       function generateBoard(items, gridSize, isColorGame = false) {
@@ -1294,8 +1295,10 @@
                   cell.classList.remove('free-pick-marked');
                 }
 
-                playSoundEffect(clickAudio, 0.5);
-                checkBingo();
+                const hadNewWin = checkBingo();
+                if (!hadNewWin) {
+                  playSoundEffect(clickAudio, 0.5);
+                }
               });
             }
             bingoBoardEl.appendChild(cell);
