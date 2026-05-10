@@ -1185,6 +1185,8 @@
 
         const currentPatterns = getPatternDefinitions(currentGridSize);
         let scoredThisCheck = false;
+        let shouldPlayWinnerSound = false;
+        const patternTypesAchievedBeforeCheck = new Set(achievedPatterns);
 
         Object.keys(patternPoints).forEach(patternName => {
           if (currentPatterns[patternName] && currentPatterns[patternName].length > 0) {
@@ -1194,6 +1196,10 @@
               if (line.every(index => index < fullBoardState.length && fullBoardState[index])) {
                 if (updateScore(patternName, patternKey)) {
                     scoredThisCheck = true;
+                    if (!patternTypesAchievedBeforeCheck.has(patternName)) {
+                      shouldPlayWinnerSound = true;
+                      patternTypesAchievedBeforeCheck.add(patternName);
+                    }
                 }
               }
             });
@@ -1204,7 +1210,7 @@
         bingoMessageEl.textContent = allAchievedPatternNames.join(', ');
         bingoMessageEl.classList.toggle('has-message', allAchievedPatternNames.length > 0);
 
-        if (scoredThisCheck) {
+        if (shouldPlayWinnerSound) {
           playSoundEffect(bingoAudio, 1.0);
           startConfetti(confettiCanvas);
           setTimeout(() => stopConfetti(confettiCanvas), 3000);
@@ -1228,7 +1234,7 @@
             });
           }
         });
-        return scoredThisCheck;
+        return shouldPlayWinnerSound;
       }
 
       function generateBoard(items, gridSize, isColorGame = false) {
