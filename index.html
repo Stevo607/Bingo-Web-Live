@@ -250,6 +250,18 @@
         #bingo-message.has-message {
           visibility: visible;
         }
+        #near-win-message {
+          min-height: 1.6em;
+          margin: -4px 0 8px;
+          text-align: left;
+          font-size: 0.86em;
+          font-weight: 700;
+          color: #355070;
+          visibility: hidden;
+        }
+        #near-win-message.has-message {
+          visibility: visible;
+        }
 
         .road-watch {
           margin-top: 12px;
@@ -307,6 +319,23 @@
           color: #2a9d8f;
           min-height: 1em;
           text-align: right;
+        }
+        .road-difficulty-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 0.7em;
+          font-weight: 800;
+          color: #59708d;
+        }
+        #road-watch-difficulty {
+          border: 1px solid rgba(89,112,141,0.35);
+          border-radius: 999px;
+          padding: 4px 8px;
+          background: rgba(255,255,255,0.82);
+          color: #355070;
+          font-weight: 800;
+          font-size: 0.95em;
         }
         .road-scene {
           position: relative;
@@ -702,6 +731,7 @@
     </div>
 
     <div id="bingo-message" class="winning-message"></div>
+    <div id="near-win-message"></div>
 
     <div class="game-type-buttons">
         <button id="usa-game" class="game-button">USA</button>
@@ -723,6 +753,13 @@
                 <div class="road-watch-subtitle">Tap a bouncing car or mark the matching state on your board.</div>
             </div>
             <div class="road-watch-controls">
+                <label class="road-difficulty-label" for="road-watch-difficulty">Level
+                    <select id="road-watch-difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </label>
                 <button id="road-watch-toggle" class="road-watch-button">Start</button>
                 <div id="road-watch-status">Ready</div>
             </div>
@@ -787,10 +824,12 @@
       let roadWatchRunning = false;
       let freePicksRemaining = null;
       let allowProgrammaticMark = false;
+      let roadDifficulty = 'normal';
 
       const roadSceneEl = document.getElementById('road-scene');
       const roadWatchStatusEl = document.getElementById('road-watch-status');
       const roadWatchToggleEl = document.getElementById('road-watch-toggle');
+      const roadWatchDifficultyEl = document.getElementById('road-watch-difficulty');
       const ROAD_CAR_COLORS = [
         { base: '#4dabf7', highlight: '#8fd3ff' },
         { base: '#ff7b54', highlight: '#ffb088' },
@@ -806,12 +845,26 @@
         'PERIMETER': 40,
         'COVER ALL': 60
       };
+      const patternDisplayNames = {
+        'BINGO': 'Bingo line',
+        'FOUR CORNERS': 'Four Corners',
+        'STAMP': 'Postage Stamp',
+        'T': 'T shape',
+        'PERIMETER': 'Perimeter',
+        'COVER ALL': 'Cover All'
+      };
+      const roadDifficultySettings = {
+        easy: { label: 'Easy', intervalMs: 6500, revealMs: 5200, speedMultiplier: 0.72, boardBias: 0.82 },
+        normal: { label: 'Normal', intervalMs: 5200, revealMs: 3600, speedMultiplier: 1, boardBias: 0.58 },
+        hard: { label: 'Hard', intervalMs: 3800, revealMs: 2400, speedMultiplier: 1.35, boardBias: 0.36 }
+      };
 
       const scoreEl = document.getElementById('score');
       const soundToggle = document.getElementById('sound-toggle');
       const musicToggle = document.getElementById('music-toggle');
       const bingoBoardEl = document.getElementById('bingo-board');
       const bingoMessageEl = document.getElementById('bingo-message');
+      const nearWinMessageEl = document.getElementById('near-win-message');
       const bingoAudio = document.getElementById('bingo-audio');
       const clickAudio = document.getElementById('click-audio');
       const zonkAudio = document.getElementById('zonk-audio');
@@ -924,6 +977,16 @@
           : Object.entries(stateNames);
       }
 
+      function currentBoardEntries(includeMarked = true) {
+        return Array.from(document.querySelectorAll('#bingo-board .bingo-cell[data-item]:not([data-item="FREEPLAY"]):not([disabled])'))
+          .filter(cell => includeMarked || !cell.classList.contains('marked'))
+          .map(cell => [cell.dataset.item, cell.querySelector('.cell-name')?.textContent || currentBoardLookup[cell.dataset.item] || cell.dataset.item]);
+      }
+
+      function currentRoadDifficultySettings() {
+        return roadDifficultySettings[roadDifficulty] || roadDifficultySettings.normal;
+      }
+
       function updateRoadWatchStatus(text, tone = 'default') {
         roadWatchStatusEl.textContent = text;
         roadWatchStatusEl.style.color = tone === 'success' ? '#2f855a' : tone === 'alert' ? '#c05621' : '#2a9d8f';
@@ -935,9 +998,11 @@
       }
 
       function assignRevealToCar(car) {
-        const available = Object.entries(currentBoardLookup);
+        const settings = currentRoadDifficultySettings();
+        const boardPool = currentBoardEntries(false);
         const fallback = currentRoadPool();
-        const pool = available.length ? available : fallback;
+        const preferBoard = boardPool.length > 0 && Math.random() < settings.boardBias;
+        const pool = preferBoard ? boardPool : fallback;
         if (!pool.length) return null;
         const [abbr, stateName] = pool[Math.floor(Math.random() * pool.length)];
         car.dataset.stateAbbr = abbr;
@@ -980,7 +1045,7 @@
         allowProgrammaticMark = false;
         cell.classList.remove('road-watch-target');
         if (source === 'road') {
-          updateRoadWatchStatus(`Marked ${currentBoardLookup[stateAbbr] || stateAbbr}`, 'success');
+          updateRoadWatchStatus(`Claimed ${currentBoardLookup[stateAbbr] || stateAbbr}!`, 'success');
         }
         return true;
       }
@@ -991,7 +1056,7 @@
         const cell = document.querySelector(`#bingo-board .bingo-cell[data-item="${stateAbbr}"]`);
         if (cell && cell.classList.contains('marked')) {
           playSoundEffect(alreadyMarkedAudio, 0.55);
-          updateRoadWatchStatus(`${car.dataset.stateName || 'That state'} was already marked`, 'default');
+          updateRoadWatchStatus(`${car.dataset.stateName || 'That state'} already marked.`, 'default');
           return;
         }
         const success = markBoardStateByAbbr(stateAbbr, 'road');
@@ -1000,7 +1065,7 @@
           setTimeout(() => car.classList.remove('mark-success'), 450);
         } else {
           playSoundEffect(zonkAudio, 0.5);
-          updateRoadWatchStatus(`${car.dataset.stateName || 'That state'} is not on this board`, 'alert');
+          updateRoadWatchStatus(`${car.dataset.stateName || 'That state'} is not on this board.`, 'alert');
         }
       }
 
@@ -1021,14 +1086,14 @@
         car.classList.toggle('reveal-match', onBoard);
         car.classList.toggle('reveal-miss', !onBoard);
         highlightRoadWatchTarget(onBoard ? reveal.abbr : null);
-        updateRoadWatchStatus(`Spotted: ${reveal.stateName}`, onBoard ? 'success' : 'alert');
+        updateRoadWatchStatus(`${reveal.stateName} spotted — ${onBoard ? 'on your board!' : 'not on this board.'}`, onBoard ? 'success' : 'alert');
         setTimeout(() => {
           if (activeRevealCar === car) {
             clearActiveRoadReveal();
             clearRoadWatchTargets();
-            updateRoadWatchStatus('Cruising…');
+            updateRoadWatchStatus(`${currentRoadDifficultySettings().label} mode — cruising…`);
           }
-        }, 3600);
+        }, currentRoadDifficultySettings().revealMs);
       }
 
       function startRoadWatch() {
@@ -1038,9 +1103,9 @@
         updateRoadWatchButton();
         updateFreePickButton();
         updateBoardInteractionLock();
-        updateRoadWatchStatus(currentIsColorGame ? 'Road Watch is disabled in Kid Colors.' : 'Cruising…');
+        updateRoadWatchStatus(currentIsColorGame ? 'Road Watch is disabled in Kid Colors.' : `${currentRoadDifficultySettings().label} mode — cruising…`);
         syncRoadMusicState();
-        roadWatchTimer = setInterval(triggerRoadReveal, 5200);
+        roadWatchTimer = setInterval(triggerRoadReveal, currentRoadDifficultySettings().intervalMs);
         if (!currentIsColorGame) {
           setTimeout(triggerRoadReveal, 1100);
         }
@@ -1067,7 +1132,7 @@
         roadCars.forEach(car => {
           const speed = Number(car.dataset.speed || '0.14');
           let progress = Number(car.dataset.progress || '0');
-          progress += speed * 0.0065;
+          progress += speed * currentRoadDifficultySettings().speedMultiplier * 0.0065;
           if (progress > 1.2) progress = -0.25;
           car.dataset.progress = String(progress);
           car.style.left = `${progress * sceneWidth}px`;
@@ -1104,6 +1169,8 @@
         bingoMessageEl.style.display = '';
         bingoMessageEl.textContent = '';
         bingoMessageEl.classList.remove('has-message');
+        nearWinMessageEl.textContent = '';
+        nearWinMessageEl.classList.remove('has-message');
         clearActiveRoadReveal();
         clearRoadWatchTargets();
         if (currentIsColorGame) {
@@ -1111,7 +1178,7 @@
         } else if (!roadWatchRunning) {
           updateRoadWatchStatus('Ready');
         } else {
-          updateRoadWatchStatus('Cruising…');
+          updateRoadWatchStatus(`${currentRoadDifficultySettings().label} mode — cruising…`);
         }
         updateFreePickButton();
         updateBoardInteractionLock();
@@ -1190,6 +1257,29 @@
         return definitions;
       }
 
+      function updateNearWinHints(currentPatterns, fullBoardState) {
+        if (!nearWinMessageEl || currentIsColorGame) {
+          if (nearWinMessageEl) nearWinMessageEl.classList.remove('has-message');
+          return;
+        }
+        const hints = [];
+        Object.keys(patternPoints).forEach(patternName => {
+          if (achievedPatterns.has(patternName) || !currentPatterns[patternName]) return;
+          let bestMissing = Infinity;
+          currentPatterns[patternName].forEach(line => {
+            const missing = line.filter(index => !(index < fullBoardState.length && fullBoardState[index])).length;
+            bestMissing = Math.min(bestMissing, missing);
+          });
+          if (bestMissing === 1 || bestMissing === 2) {
+            hints.push({ patternName, missing: bestMissing });
+          }
+        });
+        hints.sort((a, b) => a.missing - b.missing || patternPoints[b.patternName] - patternPoints[a.patternName]);
+        const displayHints = hints.slice(0, 2).map(hint => `${hint.missing} away from ${patternDisplayNames[hint.patternName] || hint.patternName}`);
+        nearWinMessageEl.textContent = displayHints.length ? `Almost there: ${displayHints.join(' • ')}` : '';
+        nearWinMessageEl.classList.toggle('has-message', displayHints.length > 0);
+      }
+
       function checkBingo() {
         const allVisualCells = document.querySelectorAll('#bingo-board .bingo-cell:not(.bonus-cell)');
         const fullBoardState = Array.from(allVisualCells).map(cell => cell.classList.contains('marked'));
@@ -1225,6 +1315,7 @@
         const allAchievedPatternNames = Array.from(achievedPatterns);
         bingoMessageEl.textContent = allAchievedPatternNames.join(', ');
         bingoMessageEl.classList.toggle('has-message', allAchievedPatternNames.length > 0);
+        updateNearWinHints(currentPatterns, fullBoardState);
 
         if (newWinningPatternTypes.length > 0) {
           playWinnerCelebration(newWinningPatternTypes.length);
@@ -1402,6 +1493,17 @@
           const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
       }
+      roadWatchDifficultyEl.addEventListener('change', () => {
+        roadDifficulty = roadWatchDifficultyEl.value;
+        if (roadWatchRunning) {
+          clearActiveRoadReveal();
+          clearRoadWatchTargets();
+          if (roadWatchTimer) clearInterval(roadWatchTimer);
+          roadWatchTimer = setInterval(triggerRoadReveal, currentRoadDifficultySettings().intervalMs);
+          updateRoadWatchStatus(`${currentRoadDifficultySettings().label} mode — cruising…`);
+        }
+      });
+
       roadWatchToggleEl.addEventListener('click', () => {
         if (roadWatchRunning) {
           stopRoadWatch();
@@ -1464,7 +1566,7 @@
                     <h3>Goal</h3>
                     <div class="help-game-type">
                         <h4>Complete a Pattern</h4>
-                        <p>Mark states as you see their plates. Score when you complete a straight line, diagonal, Four Corners, Postage Stamp, T shape, Perimeter, or Cover All.</p>
+                        <p>Mark states as you see their plates. Score when you complete a straight line, diagonal, Four Corners, Postage Stamp, T shape, Perimeter, or Cover All. The hint line shows when you are one or two squares away from a pattern.</p>
                     </div>
                 </div>
                 <div class="help-section">
@@ -1530,7 +1632,7 @@
                     </div>
                     <div class="help-game-type">
                         <h4>Watch for the Active Car</h4>
-                        <p>Every few seconds, one car reveals a license plate and state name. The status line tells you what was spotted.</p>
+                        <p>Every few seconds, one car reveals a license plate and state name. The status line tells you whether the spotted state is on your board or is a decoy.</p>
                     </div>
                     <div class="help-game-type">
                         <h4>Claim the State</h4>
@@ -1546,6 +1648,10 @@
                     <div class="help-game-type">
                         <h4>No Manual Hunting</h4>
                         <p>While Road Watch is running, you cannot freely mark board squares. You can only claim the current glowing target, tap the active car, or use a Free Pick.</p>
+                    </div>
+                    <div class="help-game-type">
+                        <h4>Difficulty Levels</h4>
+                        <p>Easy gives you more time and more board matches. Normal uses the standard pace. Hard moves faster, gives less claim time, and includes more decoys.</p>
                     </div>
                     <div class="help-game-type">
                         <h4>Three Free Picks</h4>
