@@ -840,6 +840,23 @@
         audioEl.play().catch(() => {});
       }
 
+      function playWinnerCelebration(repeatCount = 1) {
+        if (!soundToggle.checked || !bingoAudio || repeatCount <= 0) return;
+        let remaining = repeatCount;
+        const playNext = () => {
+          if (!soundToggle.checked || remaining <= 0) return;
+          remaining -= 1;
+          bingoAudio.pause();
+          bingoAudio.currentTime = 0;
+          bingoAudio.volume = 1.0;
+          bingoAudio.onended = playNext;
+          bingoAudio.play().catch(() => {
+            bingoAudio.onended = null;
+          });
+        };
+        playNext();
+      }
+
       function stopSoundEffects() {
         [bingoAudio, clickAudio, zonkAudio, alreadyMarkedAudio].forEach(audioEl => {
           if (!audioEl) return;
@@ -1185,7 +1202,7 @@
 
         const currentPatterns = getPatternDefinitions(currentGridSize);
         let scoredThisCheck = false;
-        let shouldPlayWinnerSound = false;
+        const newWinningPatternTypes = [];
         const patternTypesAchievedBeforeCheck = new Set(achievedPatterns);
 
         Object.keys(patternPoints).forEach(patternName => {
@@ -1197,7 +1214,7 @@
                 if (updateScore(patternName, patternKey)) {
                     scoredThisCheck = true;
                     if (!patternTypesAchievedBeforeCheck.has(patternName)) {
-                      shouldPlayWinnerSound = true;
+                      newWinningPatternTypes.push(patternName);
                       patternTypesAchievedBeforeCheck.add(patternName);
                     }
                 }
@@ -1210,8 +1227,8 @@
         bingoMessageEl.textContent = allAchievedPatternNames.join(', ');
         bingoMessageEl.classList.toggle('has-message', allAchievedPatternNames.length > 0);
 
-        if (shouldPlayWinnerSound) {
-          playSoundEffect(bingoAudio, 1.0);
+        if (newWinningPatternTypes.length > 0) {
+          playWinnerCelebration(newWinningPatternTypes.length);
           startConfetti(confettiCanvas);
           setTimeout(() => stopConfetti(confettiCanvas), 3000);
         }
@@ -1234,7 +1251,7 @@
             });
           }
         });
-        return shouldPlayWinnerSound;
+        return newWinningPatternTypes.length > 0;
       }
 
       function generateBoard(items, gridSize, isColorGame = false) {
