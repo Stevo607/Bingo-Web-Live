@@ -851,6 +851,7 @@
 
       const GRID_USA = 5, GRID_KIDS = 4;
       const GAME_STATE_KEY = 'licensePlateBingo.gameState.v1';
+      const PLATE_ASSET_VERSION = '2026-07-14-1';
       const gameConfigs = {
         usa: { items: stateNames, gridSize: GRID_USA, isColorGame: false },
         east: { items: eastStates, gridSize: GRID_USA, isColorGame: false },
@@ -1295,6 +1296,28 @@
         }
       }
 
+      function createPlateImage(stateAbbr, stateName) {
+        const image = document.createElement('img');
+        let retryCount = 0;
+        image.alt = `${stateName} license plate`;
+        image.decoding = 'async';
+
+        const setSource = () => {
+          const retrySuffix = retryCount ? `&retry=${retryCount}` : '';
+          image.src = `./images/${stateAbbr}.png?v=${PLATE_ASSET_VERSION}${retrySuffix}`;
+        };
+        image.addEventListener('error', () => {
+          if (retryCount >= 3) {
+            image.style.display = 'none';
+            return;
+          }
+          retryCount += 1;
+          setTimeout(setSource, retryCount * 500);
+        });
+        setSource();
+        return image;
+      }
+
       function resetGameState() {
         score = 0;
         achievedPatterns.clear();
@@ -1537,12 +1560,14 @@
                 cell.setAttribute('aria-disabled', 'true');
             } else {
                 const stateName = items[currentItem] || "Unknown";
-                cell.innerHTML = `<img src="images/${currentItem}.png" alt="${stateName}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.marginTop='auto';">
-                                  <div class="cell-name">${stateName}</div>`;
+                const label = document.createElement('div');
+                label.className = 'cell-name';
+                label.textContent = stateName;
+                cell.append(createPlateImage(currentItem, stateName), label);
                 cell.dataset.item = currentItem;
                 cell.setAttribute('aria-label', stateName);
                 cell.setAttribute('aria-pressed', 'false');
-                fitCellLabel(cell.querySelector('.cell-name'), stateName);
+                fitCellLabel(label, stateName);
             }
 
             if (!cell.disabled && cell.dataset.item !== 'FREEPLAY') {
