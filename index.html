@@ -1398,6 +1398,14 @@
         }
       }
 
+      function centerRoadCar(car, sceneWidth = roadSceneEl.clientWidth || 320) {
+        const carWidth = car.offsetWidth || 66;
+        const centeredX = Math.max(8, (sceneWidth - carWidth) / 2);
+        car.dataset.x = String(centeredX);
+        car.style.transform = `translate3d(${centeredX.toFixed(2)}px, 0, 0)`;
+        return centeredX;
+      }
+
       function triggerRoadReveal() {
         if (!roadWatchRunning) return;
         if (currentIsColorGame || roadCars.length === 0) {
@@ -1410,6 +1418,7 @@
         const reveal = assignRevealToCar(car);
         if (!reveal) return;
         activeRevealCar = car;
+        centerRoadCar(car);
         car.classList.add('revealed');
         const boardCell = document.querySelector(`#bingo-board .bingo-cell[data-item="${reveal.abbr}"]`);
         const onBoard = Boolean(boardCell && !boardCell.classList.contains('marked'));
@@ -1465,7 +1474,9 @@
         roadCars.forEach((car, index) => {
           let x = Number(car.dataset.x || '-90');
           const speed = Number(car.dataset.speed || '50');
-          if (reducedMotionQuery.matches) {
+          if (car.classList.contains('revealed')) {
+            x = centerRoadCar(car, sceneWidth);
+          } else if (reducedMotionQuery.matches) {
             x = ((index + 0.45) / roadCars.length) * Math.max(180, sceneWidth - 70);
           } else if (!document.hidden) {
             x += speed * currentRoadDifficultySettings().speedMultiplier * (deltaMs / 1000);
