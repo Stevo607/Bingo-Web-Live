@@ -296,6 +296,68 @@
           background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(233,241,255,0.92));
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 8px 24px rgba(29,53,87,0.08);
         }
+        .road-watch-prompt {
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 9px;
+          width: 100%;
+          margin: 10px auto -4px;
+          padding: 8px 10px;
+          border: 2px solid rgba(47, 128, 237, 0.25);
+          border-radius: 14px;
+          background: linear-gradient(135deg, rgba(239, 247, 255, 0.98), rgba(255, 255, 255, 0.98));
+          box-shadow: 0 6px 16px rgba(29, 53, 87, 0.08);
+          text-align: left;
+        }
+        .road-watch-prompt[hidden] { display: none; }
+        .road-watch-prompt.is-match {
+          border-color: rgba(47, 133, 90, 0.42);
+          background: linear-gradient(135deg, #effcf4, #ffffff);
+        }
+        .road-watch-prompt.is-alert {
+          border-color: rgba(192, 86, 33, 0.4);
+          background: linear-gradient(135deg, #fff7ed, #ffffff);
+        }
+        .road-prompt-abbr {
+          display: grid;
+          place-items: center;
+          min-width: 48px;
+          min-height: 34px;
+          padding: 4px 7px;
+          border-radius: 8px;
+          background: #1d3557;
+          color: white;
+          font-size: 0.88em;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+        }
+        .road-prompt-copy { min-width: 0; }
+        .road-prompt-label {
+          color: #59708d;
+          font-size: 0.58em;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          line-height: 1.1;
+          text-transform: uppercase;
+        }
+        .road-prompt-state {
+          overflow: hidden;
+          color: #1d3557;
+          font-size: 0.84em;
+          font-weight: 900;
+          line-height: 1.15;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .road-prompt-timer {
+          min-width: 64px;
+          color: #355070;
+          font-size: 0.68em;
+          font-weight: 900;
+          text-align: right;
+          white-space: nowrap;
+        }
         .road-watch-header {
           display: flex;
           justify-content: space-between;
@@ -469,17 +531,31 @@
         }
         .car {
           position: absolute;
+          left: 0;
           bottom: 12px;
+          width: 66px;
+          height: 33px;
+          padding: 0;
+          border: 0;
+          background: transparent;
+          cursor: pointer;
+          transform: translate3d(-90px, 0, 0);
+          will-change: transform;
+        }
+        .car-body {
+          position: relative;
+          display: block;
           width: 66px;
           height: 33px;
           border-radius: 18px 22px 12px 12px;
           background: linear-gradient(180deg, var(--car-highlight, #8fd3ff) 0%, var(--car-color, #4dabf7) 68%);
           border: 2px solid rgba(255,255,255,0.45);
           box-shadow: 0 5px 10px rgba(0,0,0,0.18);
-          transition: transform 0.25s ease, filter 0.25s ease, box-shadow 0.25s ease;
-          cursor: pointer;
+          transform: translate3d(0, var(--road-bob, 0px), 0);
+          transition: filter 0.2s ease, box-shadow 0.2s ease;
+          will-change: transform;
         }
-        .car::before {
+        .car-body::before {
           content: '';
           position: absolute;
           width: 28px;
@@ -490,7 +566,7 @@
           border-radius: 14px 14px 5px 5px;
           border: 2px solid rgba(255,255,255,0.55);
         }
-        .car::after {
+        .car-body::after {
           content: '';
           position: absolute;
           inset: auto 10px -6px 10px;
@@ -571,29 +647,46 @@
           line-height: 1.08;
           margin-top: 3px;
         }
-        .car.revealed {
-          transform: translateY(-10px) scale(1.06);
+        .car.revealed .car-body {
+          transform: translate3d(0, -10px, 0) scale(1.06);
           filter: saturate(1.1) brightness(1.02);
-          z-index: 5;
           box-shadow: 0 10px 18px rgba(0,0,0,0.22);
         }
+        .car.revealed { z-index: 5; }
         .car.revealed .plate-reveal {
           opacity: 1;
           transform: translateX(-50%) scale(1);
         }
-        .car.reveal-match {
+        .car.reveal-match .car-body {
           box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.28), 0 10px 18px rgba(0,0,0,0.2);
         }
-        .car.reveal-miss {
+        .car.reveal-miss .car-body {
           box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.24), 0 10px 18px rgba(0,0,0,0.2);
         }
-        .car.mark-success {
+        .car.mark-success .car-body {
           animation: car-pop 0.45s ease;
         }
         @keyframes car-pop {
           0% { transform: translateY(-10px) scale(1.05); }
           50% { transform: translateY(-18px) scale(1.1); }
           100% { transform: translateY(-10px) scale(1.05); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .cloud,
+          .road::before,
+          .pulse,
+          .car.mark-success .car-body {
+            animation: none !important;
+          }
+          .bingo-cell,
+          .plate-reveal,
+          .car-body {
+            transition-duration: 0.01ms !important;
+          }
+          .bingo-cell.road-watch-target {
+            scroll-behavior: auto;
+          }
         }
 
         .confetti {
@@ -776,6 +869,15 @@
 
     <p class="safety-notice">Passengers only: do not play while driving.</p>
 
+    <div id="road-watch-prompt" class="road-watch-prompt" hidden>
+        <div id="road-prompt-abbr" class="road-prompt-abbr">--</div>
+        <div class="road-prompt-copy">
+            <div id="road-prompt-label" class="road-prompt-label">Road Watch</div>
+            <div id="road-prompt-state" class="road-prompt-state">Get ready</div>
+        </div>
+        <div id="road-prompt-timer" class="road-prompt-timer" aria-hidden="true">Next --</div>
+    </div>
+
     <div id="bingo-board"></div>
 
     <div class="action-buttons-container">
@@ -823,7 +925,7 @@
 <audio id="click-audio" preload="auto" src="audio/wood_plank_flicks.ogg"></audio>
 <audio id="zonk-audio" preload="auto" src="audio/clang_and_wobble.ogg"></audio>
 <audio id="already-marked-audio" preload="auto" src="audio/pop.ogg"></audio>
-<audio id="road-music-audio" preload="auto" loop src="roadwatch-music.wav"></audio>
+<audio id="road-music-audio" preload="metadata" loop src="roadwatch-music.mp3"></audio>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -865,6 +967,14 @@
       let currentGridSize = GRID_USA;
       let currentBoardLookup = {};
       let roadWatchTimer = null;
+      let roadWatchTimerToken = 0;
+      let roadRoundDeadline = 0;
+      let roadRoundPhase = 'idle';
+      let roadStateBag = [];
+      let lastRoadStateAbbr = null;
+      let roadPausedByVisibility = false;
+      let roadAnimationFrameId = null;
+      let lastRoadAnimationTime = null;
       let activeRevealCar = null;
       let roadWatchRunning = false;
       let freePicksRemaining = null;
@@ -876,6 +986,12 @@
       const roadWatchStatusEl = document.getElementById('road-watch-status');
       const roadWatchToggleEl = document.getElementById('road-watch-toggle');
       const roadWatchDifficultyEl = document.getElementById('road-watch-difficulty');
+      const roadWatchPromptEl = document.getElementById('road-watch-prompt');
+      const roadPromptAbbrEl = document.getElementById('road-prompt-abbr');
+      const roadPromptLabelEl = document.getElementById('road-prompt-label');
+      const roadPromptStateEl = document.getElementById('road-prompt-state');
+      const roadPromptTimerEl = document.getElementById('road-prompt-timer');
+      const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
       const ROAD_CAR_COLORS = [
         { base: '#4dabf7', highlight: '#8fd3ff' },
         { base: '#ff7b54', highlight: '#ffb088' },
@@ -900,9 +1016,9 @@
         'COVER ALL': 'Cover All'
       };
       const roadDifficultySettings = {
-        easy: { label: 'Easy', intervalMs: 6500, revealMs: 5200, speedMultiplier: 0.72, boardBias: 0.82 },
-        normal: { label: 'Normal', intervalMs: 5200, revealMs: 3600, speedMultiplier: 1, boardBias: 0.58 },
-        hard: { label: 'Hard', intervalMs: 3800, revealMs: 2400, speedMultiplier: 1.35, boardBias: 0.36 }
+        easy: { label: 'Easy', revealMs: 5200, betweenRoundMs: 1300, successDelayMs: 650, speedMultiplier: 0.72, boardBias: 0.82 },
+        normal: { label: 'Normal', revealMs: 3600, betweenRoundMs: 950, successDelayMs: 525, speedMultiplier: 1, boardBias: 0.58 },
+        hard: { label: 'Hard', revealMs: 2400, betweenRoundMs: 650, successDelayMs: 425, speedMultiplier: 1.35, boardBias: 0.36 }
       };
 
       const scoreEl = document.getElementById('score');
@@ -922,14 +1038,16 @@
       const gameTypeButtons = document.querySelectorAll('.game-type-buttons [data-game-type]');
 
       function syncRoadMusicState() {
-        const shouldPlay = musicToggle.checked && roadWatchRunning && !currentIsColorGame;
+        const shouldPlay = musicToggle.checked && roadWatchRunning && !currentIsColorGame && !document.hidden;
         roadMusicAudio.volume = 0.22;
         if (shouldPlay) {
           roadMusicAudio.currentTime = roadMusicAudio.currentTime || 0;
           roadMusicAudio.play().catch(() => {});
         } else {
           roadMusicAudio.pause();
-          roadMusicAudio.currentTime = 0;
+          if (!roadWatchRunning || currentIsColorGame || !musicToggle.checked) {
+            roadMusicAudio.currentTime = 0;
+          }
         }
       }
 
@@ -1073,19 +1191,22 @@
           const car = document.createElement('button');
           car.className = 'car';
           car.type = 'button';
+          car.setAttribute('aria-label', `Cruising car ${index + 1}`);
           car.style.setProperty('--car-color', colorSet.base);
           car.style.setProperty('--car-highlight', colorSet.highlight);
-          car.style.left = `${-120 - (index * 110)}px`;
-          car.dataset.progress = String(index / ROAD_CAR_COLORS.length);
-          car.dataset.speed = String(0.12 + index * 0.035);
+          car.dataset.x = String(-90 - (index * 125));
+          car.dataset.speed = String(44 + index * 11);
+          car.dataset.phase = String(index * 1.8);
           car.innerHTML = `
-            <span class="car-wheel left"></span>
-            <span class="car-wheel right"></span>
-            <span class="car-front-light"></span>
-            <span class="car-plate"></span>
-            <span class="plate-reveal">
-              <div class="plate-abbr">--</div>
-              <div class="plate-name">Cruising</div>
+            <span class="car-body">
+              <span class="car-wheel left"></span>
+              <span class="car-wheel right"></span>
+              <span class="car-front-light"></span>
+              <span class="car-plate"></span>
+              <span class="plate-reveal">
+                <span class="plate-abbr">--</span>
+                <span class="plate-name">Cruising</span>
+              </span>
             </span>`;
           car.addEventListener('click', () => handleRoadCarTap(car));
           roadSceneEl.appendChild(car);
@@ -1115,6 +1236,25 @@
         roadWatchStatusEl.style.color = tone === 'success' ? '#2f855a' : tone === 'alert' ? '#c05621' : '#2a9d8f';
       }
 
+      function updateRoadWatchPrompt({ label = 'Road Watch', abbr = '--', state = 'Get ready', tone = 'default' } = {}) {
+        roadWatchPromptEl.hidden = !roadWatchRunning || currentIsColorGame;
+        roadWatchPromptEl.classList.toggle('is-match', tone === 'success');
+        roadWatchPromptEl.classList.toggle('is-alert', tone === 'alert');
+        roadPromptLabelEl.textContent = label;
+        roadPromptAbbrEl.textContent = abbr;
+        roadPromptStateEl.textContent = state;
+      }
+
+      function updateRoadWatchCountdown(now = performance.now()) {
+        if (roadWatchPromptEl.hidden || !roadRoundDeadline) {
+          roadPromptTimerEl.textContent = 'Next --';
+          return;
+        }
+        const seconds = Math.max(0, roadRoundDeadline - now) / 1000;
+        const prefix = roadRoundPhase === 'reveal' ? 'Claim' : roadRoundPhase === 'claimed' ? 'Next' : 'Next';
+        roadPromptTimerEl.textContent = `${prefix} ${seconds.toFixed(1)}s`;
+      }
+
       function updateRoadWatchButton() {
         if (currentIsColorGame) {
           roadWatchToggleEl.textContent = 'Unavailable';
@@ -1127,16 +1267,43 @@
         roadWatchToggleEl.classList.toggle('stop', roadWatchRunning);
       }
 
+      function refillRoadStateBag(pool) {
+        roadStateBag = shuffle(pool.slice());
+        if (roadStateBag.length > 1 && roadStateBag[0][0] === lastRoadStateAbbr) {
+          const swapIndex = roadStateBag.findIndex(([abbr]) => abbr !== lastRoadStateAbbr);
+          [roadStateBag[0], roadStateBag[swapIndex]] = [roadStateBag[swapIndex], roadStateBag[0]];
+        }
+      }
+
+      function drawRoadState(preferredPool, fallbackPool) {
+        if (!fallbackPool.length) return null;
+        const desiredPool = preferredPool.length ? preferredPool : fallbackPool;
+        const desiredAbbrs = new Set(desiredPool.map(([abbr]) => abbr));
+        let bagIndex = roadStateBag.findIndex(([abbr]) => desiredAbbrs.has(abbr) && abbr !== lastRoadStateAbbr);
+        if (bagIndex < 0) {
+          refillRoadStateBag(fallbackPool);
+          bagIndex = roadStateBag.findIndex(([abbr]) => desiredAbbrs.has(abbr) && abbr !== lastRoadStateAbbr);
+        }
+        if (bagIndex < 0) {
+          bagIndex = roadStateBag.findIndex(([abbr]) => desiredAbbrs.has(abbr));
+        }
+        if (bagIndex < 0) return null;
+        const [entry] = roadStateBag.splice(bagIndex, 1);
+        lastRoadStateAbbr = entry[0];
+        return entry;
+      }
+
       function assignRevealToCar(car) {
         const settings = currentRoadDifficultySettings();
         const boardPool = currentBoardEntries(false);
         const fallback = currentRoadPool();
         const preferBoard = boardPool.length > 0 && Math.random() < settings.boardBias;
-        const pool = preferBoard ? boardPool : fallback;
-        if (!pool.length) return null;
-        const [abbr, stateName] = pool[Math.floor(Math.random() * pool.length)];
+        const entry = drawRoadState(preferBoard ? boardPool : fallback, fallback);
+        if (!entry) return null;
+        const [abbr, stateName] = entry;
         car.dataset.stateAbbr = abbr;
         car.dataset.stateName = stateName;
+        car.setAttribute('aria-label', `${stateName} plate car`);
         car.querySelector('.plate-abbr').textContent = abbr;
         car.querySelector('.plate-name').textContent = stateName;
         return { abbr, stateName };
@@ -1145,6 +1312,7 @@
       function clearActiveRoadReveal() {
         if (!activeRevealCar) return;
         activeRevealCar.classList.remove('revealed', 'mark-success', 'reveal-match', 'reveal-miss');
+        activeRevealCar.setAttribute('aria-label', 'Cruising car');
         activeRevealCar = null;
       }
 
@@ -1161,23 +1329,58 @@
         const cell = document.querySelector(`#bingo-board .bingo-cell[data-item="${stateAbbr}"]`);
         if (cell) {
           cell.classList.add('road-watch-target');
-          cell.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+          cell.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reducedMotionQuery.matches ? 'auto' : 'smooth' });
         }
         updateBoardInteractionLock();
       }
 
-      function markBoardStateByAbbr(stateAbbr, source = 'road') {
+      function markBoardStateByAbbr(stateAbbr) {
         if (!stateAbbr) return false;
         const cell = document.querySelector(`#bingo-board .bingo-cell[data-item="${stateAbbr}"]`);
         if (!cell || cell.classList.contains('marked')) return false;
         allowProgrammaticMark = true;
         cell.click();
         allowProgrammaticMark = false;
-        cell.classList.remove('road-watch-target');
-        if (source === 'road') {
-          updateRoadWatchStatus(`Claimed ${currentBoardLookup[stateAbbr] || stateAbbr}!`, 'success');
-        }
         return true;
+      }
+
+      function cancelRoadWatchTimer() {
+        roadWatchTimerToken += 1;
+        if (roadWatchTimer) clearTimeout(roadWatchTimer);
+        roadWatchTimer = null;
+        roadRoundDeadline = 0;
+      }
+
+      function scheduleRoadAction(callback, delayMs, phase) {
+        cancelRoadWatchTimer();
+        const token = roadWatchTimerToken;
+        roadRoundPhase = phase;
+        roadRoundDeadline = performance.now() + delayMs;
+        updateRoadWatchCountdown();
+        roadWatchTimer = setTimeout(() => {
+          if (token !== roadWatchTimerToken || !roadWatchRunning || document.hidden) return;
+          roadWatchTimer = null;
+          callback();
+        }, delayMs);
+      }
+
+      function beginRoadCruise(delayMs = currentRoadDifficultySettings().betweenRoundMs) {
+        if (!roadWatchRunning || document.hidden) return;
+        clearActiveRoadReveal();
+        clearRoadWatchTargets();
+        updateRoadWatchStatus(`${currentRoadDifficultySettings().label} mode — next plate incoming…`);
+        updateRoadWatchPrompt({ label: 'Next plate', state: 'Watch the road' });
+        scheduleRoadAction(triggerRoadReveal, delayMs, 'cruising');
+      }
+
+      function completeRoadClaim(stateAbbr) {
+        if (!roadWatchRunning || roadRoundPhase !== 'reveal') return;
+        const stateName = currentBoardLookup[stateAbbr] || activeRevealCar?.dataset.stateName || stateAbbr;
+        activeRevealCar?.classList.add('mark-success');
+        clearRoadWatchTargets();
+        updateRoadWatchStatus(`Claimed ${stateName}! Next plate coming up.`, 'success');
+        updateRoadWatchPrompt({ label: 'Claimed', abbr: stateAbbr, state: stateName, tone: 'success' });
+        scheduleRoadAction(() => beginRoadCruise(0), currentRoadDifficultySettings().successDelayMs, 'claimed');
       }
 
       function handleRoadCarTap(car) {
@@ -1189,11 +1392,7 @@
           updateRoadWatchStatus(`${car.dataset.stateName || 'That state'} already marked.`, 'default');
           return;
         }
-        const success = markBoardStateByAbbr(stateAbbr, 'road');
-        if (success) {
-          car.classList.add('mark-success');
-          setTimeout(() => car.classList.remove('mark-success'), 450);
-        } else {
+        if (!markBoardStateByAbbr(stateAbbr)) {
           playSoundEffect(zonkAudio, 0.5);
           updateRoadWatchStatus(`${car.dataset.stateName || 'That state'} is not on this board.`, 'alert');
         }
@@ -1212,18 +1411,14 @@
         if (!reveal) return;
         activeRevealCar = car;
         car.classList.add('revealed');
-        const onBoard = Boolean(document.querySelector(`#bingo-board .bingo-cell[data-item="${reveal.abbr}"]`));
+        const boardCell = document.querySelector(`#bingo-board .bingo-cell[data-item="${reveal.abbr}"]`);
+        const onBoard = Boolean(boardCell && !boardCell.classList.contains('marked'));
         car.classList.toggle('reveal-match', onBoard);
         car.classList.toggle('reveal-miss', !onBoard);
         highlightRoadWatchTarget(onBoard ? reveal.abbr : null);
         updateRoadWatchStatus(`${reveal.stateName} spotted — ${onBoard ? 'on your board!' : 'not on this board.'}`, onBoard ? 'success' : 'alert');
-        setTimeout(() => {
-          if (activeRevealCar === car) {
-            clearActiveRoadReveal();
-            clearRoadWatchTargets();
-            updateRoadWatchStatus(`${currentRoadDifficultySettings().label} mode — cruising…`);
-          }
-        }, currentRoadDifficultySettings().revealMs);
+        updateRoadWatchPrompt({ label: onBoard ? 'Spotted — claim it!' : 'Decoy plate', abbr: reveal.abbr, state: reveal.stateName, tone: onBoard ? 'success' : 'alert' });
+        scheduleRoadAction(beginRoadCruise, currentRoadDifficultySettings().revealMs, onBoard ? 'reveal' : 'decoy');
       }
 
       function startRoadWatch() {
@@ -1232,26 +1427,26 @@
           updateRoadWatchStatus('Road Watch is disabled in Kid Colors.');
           return;
         }
-        if (roadWatchTimer) clearInterval(roadWatchTimer);
+        cancelRoadWatchTimer();
         roadWatchRunning = true;
+        roadPausedByVisibility = false;
+        roadStateBag = [];
+        lastRoadStateAbbr = null;
         freePicksRemaining = 3;
         updateRoadWatchButton();
         updateFreePickButton();
         updateBoardInteractionLock();
-        updateRoadWatchStatus(currentIsColorGame ? 'Road Watch is disabled in Kid Colors.' : `${currentRoadDifficultySettings().label} mode — cruising…`);
+        updateRoadWatchStatus(`${currentRoadDifficultySettings().label} mode — get ready…`);
+        updateRoadWatchPrompt({ label: 'Road Watch started', state: 'First plate incoming' });
         syncRoadMusicState();
-        roadWatchTimer = setInterval(triggerRoadReveal, currentRoadDifficultySettings().intervalMs);
-        if (!currentIsColorGame) {
-          setTimeout(triggerRoadReveal, 1100);
-        }
+        scheduleRoadAction(triggerRoadReveal, 900, 'cruising');
       }
 
       function stopRoadWatch() {
-        if (roadWatchTimer) {
-          clearInterval(roadWatchTimer);
-          roadWatchTimer = null;
-        }
+        cancelRoadWatchTimer();
         roadWatchRunning = false;
+        roadPausedByVisibility = false;
+        roadRoundPhase = 'idle';
         freePicksRemaining = null;
         clearActiveRoadReveal();
         clearRoadWatchTargets();
@@ -1259,26 +1454,31 @@
         updateFreePickButton();
         updateBoardInteractionLock();
         updateRoadWatchStatus(currentIsColorGame ? 'Road Watch is disabled in Kid Colors.' : 'Ready');
+        roadWatchPromptEl.hidden = true;
         syncRoadMusicState();
       }
 
-      function animateRoadCars() {
+      function animateRoadCars(timestamp) {
+        const deltaMs = lastRoadAnimationTime == null ? 0 : Math.min(50, timestamp - lastRoadAnimationTime);
+        lastRoadAnimationTime = timestamp;
         const sceneWidth = roadSceneEl.clientWidth || 320;
-        roadCars.forEach(car => {
-          const speed = Number(car.dataset.speed || '0.14');
-          let progress = Number(car.dataset.progress || '0');
-          progress += speed * currentRoadDifficultySettings().speedMultiplier * 0.0065;
-          if (progress > 1.2) progress = -0.25;
-          car.dataset.progress = String(progress);
-          car.style.left = `${progress * sceneWidth}px`;
-          if (!car.classList.contains('revealed')) {
-            const bob = Math.sin((progress * Math.PI * 8) + speed * 10) * 1.5;
-            car.style.transform = `translateY(${bob}px)`;
-            car.style.opacity = '1';
-            car.style.zIndex = '';
+        roadCars.forEach((car, index) => {
+          let x = Number(car.dataset.x || '-90');
+          const speed = Number(car.dataset.speed || '50');
+          if (reducedMotionQuery.matches) {
+            x = ((index + 0.45) / roadCars.length) * Math.max(180, sceneWidth - 70);
+          } else if (!document.hidden) {
+            x += speed * currentRoadDifficultySettings().speedMultiplier * (deltaMs / 1000);
+            if (x > sceneWidth + 85) x = -90;
           }
+          car.dataset.x = String(x);
+          car.style.transform = `translate3d(${x.toFixed(2)}px, 0, 0)`;
+          const body = car.querySelector('.car-body');
+          const bob = reducedMotionQuery.matches ? 0 : Math.sin((timestamp / 180) + Number(car.dataset.phase || '0')) * 1.5;
+          body.style.setProperty('--road-bob', `${bob.toFixed(2)}px`);
         });
-        requestAnimationFrame(animateRoadCars);
+        updateRoadWatchCountdown(timestamp);
+        roadAnimationFrameId = requestAnimationFrame(animateRoadCars);
       }
 
       function fitCellLabel(labelEl, text) {
@@ -1335,7 +1535,11 @@
         } else if (!roadWatchRunning) {
           updateRoadWatchStatus('Ready');
         } else {
-          updateRoadWatchStatus(`${currentRoadDifficultySettings().label} mode — cruising…`);
+          cancelRoadWatchTimer();
+          roadStateBag = [];
+          lastRoadStateAbbr = null;
+          updateRoadWatchStatus(`${currentRoadDifficultySettings().label} mode — board refreshed…`);
+          updateRoadWatchPrompt({ label: 'New board', state: 'Next plate incoming' });
         }
         updateFreePickButton();
         updateBoardInteractionLock();
@@ -1575,6 +1779,7 @@
                 if (!allowProgrammaticMark && roadWatchRunning && !currentIsColorGame && !cell.classList.contains('road-watch-target')) {
                   return;
                 }
+                const isRoadClaim = roadWatchRunning && cell.classList.contains('road-watch-target') && !cell.classList.contains('marked');
                 cell.classList.toggle('marked');
                 cell.setAttribute('aria-pressed', String(cell.classList.contains('marked')));
                 if (!cell.classList.contains('marked')) {
@@ -1584,6 +1789,9 @@
                 const hadNewWin = checkBingo();
                 if (!hadNewWin) {
                   playSoundEffect(clickAudio, 0.5);
+                }
+                if (isRoadClaim && cell.classList.contains('marked')) {
+                  completeRoadClaim(cell.dataset.item);
                 }
                 saveGameState();
               });
@@ -1611,6 +1819,9 @@
         }
         updateFreePickButton();
         updateBoardInteractionLock();
+        if (roadWatchRunning && !isColorGame) {
+          beginRoadCruise(600);
+        }
         saveGameState();
       }
 
@@ -1695,13 +1906,31 @@
       roadWatchDifficultyEl.addEventListener('change', () => {
         roadDifficulty = roadWatchDifficultyEl.value;
         if (roadWatchRunning) {
-          clearActiveRoadReveal();
-          clearRoadWatchTargets();
-          if (roadWatchTimer) clearInterval(roadWatchTimer);
-          roadWatchTimer = setInterval(triggerRoadReveal, currentRoadDifficultySettings().intervalMs);
-          updateRoadWatchStatus(`${currentRoadDifficultySettings().label} mode — cruising…`);
+          beginRoadCruise(500);
         }
         saveGameState();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        lastRoadAnimationTime = null;
+        if (!roadWatchRunning) return;
+        if (document.hidden) {
+          roadPausedByVisibility = true;
+          cancelRoadWatchTimer();
+          clearActiveRoadReveal();
+          clearRoadWatchTargets();
+          roadRoundPhase = 'paused';
+          updateRoadWatchStatus('Paused while this page is hidden.');
+          updateRoadWatchPrompt({ label: 'Paused', state: 'Return to continue' });
+        } else if (roadPausedByVisibility) {
+          roadPausedByVisibility = false;
+          beginRoadCruise(600);
+        }
+        syncRoadMusicState();
+      });
+
+      reducedMotionQuery.addEventListener?.('change', () => {
+        lastRoadAnimationTime = null;
       });
 
       roadWatchToggleEl.addEventListener('click', () => {
@@ -1749,7 +1978,7 @@
       updateRoadWatchButton();
       updateFreePickButton();
       updateBoardInteractionLock();
-      animateRoadCars();
+      roadAnimationFrameId = requestAnimationFrame(animateRoadCars);
       if (!restoreGameState()) {
         startGameType('usa');
       }
@@ -1840,7 +2069,7 @@
                     </div>
                     <div class="help-game-type">
                         <h4>Watch for the Active Car</h4>
-                        <p>Every few seconds, one car reveals a license plate and state name. The status line tells you whether the spotted state is on your board or is a decoy.</p>
+                        <p>Every few seconds, one car reveals a license plate and state name. The prompt above the board shows the plate, its countdown, and whether it is claimable or a decoy.</p>
                     </div>
                     <div class="help-game-type">
                         <h4>Claim the State</h4>
@@ -1859,7 +2088,7 @@
                     </div>
                     <div class="help-game-type">
                         <h4>Difficulty Levels</h4>
-                        <p>Easy gives you more time and more board matches. Normal uses the standard pace. Hard moves faster, gives less claim time, and includes more decoys.</p>
+                        <p>Easy gives you more time and more board matches. Normal uses the standard pace. Hard moves faster, gives less claim time, and includes more decoys. A successful claim brings up the next plate quickly.</p>
                     </div>
                     <div class="help-game-type">
                         <h4>Three Free Picks</h4>
@@ -1867,7 +2096,7 @@
                     </div>
                     <div class="help-game-type">
                         <h4>Stop Anytime</h4>
-                        <p>Tap Stop to pause Road Watch, clear the active target, restore normal board tapping, and leave Road Watch mode.</p>
+                        <p>Tap Stop to clear the active target, restore normal board tapping, and leave Road Watch mode. Road Watch also pauses automatically whenever this page is hidden.</p>
                     </div>
                 </div>
                 <div class="help-section">
