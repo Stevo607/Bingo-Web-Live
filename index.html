@@ -52,7 +52,7 @@
           text-align: left;
         }
 
-        label[for="sound-toggle"] {
+        label[for="sound-toggle"], label[for="music-toggle"] {
           display: inline-flex;
           align-items: center;
           gap: 6px;
@@ -105,6 +105,18 @@
         .game-type-buttons .game-button:last-child {
           border-right: none;
         }
+        .game-type-buttons .game-button.active {
+          position: relative;
+          z-index: 1;
+          box-shadow: inset 0 0 0 3px rgba(255,255,255,0.95), inset 0 -5px 0 rgba(0,0,0,0.18);
+          filter: saturate(1.12) brightness(0.96);
+        }
+        .game-button:focus-visible,
+        .road-watch-button:focus-visible,
+        #road-watch-difficulty:focus-visible {
+          outline: 3px solid #f6c344;
+          outline-offset: 2px;
+        }
         .game-button:active {
           transform: translateY(1px);
           box-shadow: 0 3px 8px rgba(0,0,0,0.12);
@@ -115,6 +127,17 @@
         #kid-colors-game { background-color: #6f42c1; }
         #generate-board { background-color: #dc3545; }
         #free-pick { background-color: #fd7e14; } /* Orange */
+
+        .safety-notice {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          margin: 4px 0 2px;
+          color: #7a3f00;
+          font-size: 0.8em;
+          font-weight: 800;
+        }
 
 
         #bingo-board {
@@ -216,6 +239,9 @@
           cursor: pointer;
           opacity: 1;
         }
+        .bingo-cell.free-space {
+          cursor: default;
+        }
         /* This rule ensures free play text remains orange if it's a non-square cell */
         .bingo-cell:not(.square).marked .cell-name.free-play-text {
           color: #e85a17;
@@ -302,6 +328,15 @@
         .road-watch-button.stop {
           background: linear-gradient(180deg, #64748b 0%, #475569 100%);
           box-shadow: 0 6px 14px rgba(71, 85, 105, 0.22);
+        }
+        .road-watch-button:disabled,
+        #road-watch-difficulty:disabled {
+          cursor: not-allowed;
+          opacity: 0.55;
+        }
+        .road-watch.is-disabled .road-scene {
+          filter: grayscale(0.35);
+          opacity: 0.68;
         }
         .road-watch-title {
           font-size: 1em;
@@ -734,10 +769,12 @@
     <div id="near-win-message"></div>
 
     <div class="game-type-buttons">
-        <button id="usa-game" class="game-button">USA</button>
-        <button id="east-coast-game" class="game-button">East Coast</button>
-        <button id="kid-colors-game" class="game-button">Kid Colors</button>
+        <button id="usa-game" class="game-button" data-game-type="usa" aria-pressed="true">USA</button>
+        <button id="east-coast-game" class="game-button" data-game-type="east" aria-pressed="false">East Coast</button>
+        <button id="kid-colors-game" class="game-button" data-game-type="kids" aria-pressed="false">Kid Colors</button>
     </div>
+
+    <p class="safety-notice">Passengers only: do not play while driving.</p>
 
     <div id="bingo-board"></div>
 
@@ -761,7 +798,7 @@
                     </select>
                 </label>
                 <button id="road-watch-toggle" class="road-watch-button">Start</button>
-                <div id="road-watch-status">Ready</div>
+                <div id="road-watch-status" aria-live="polite">Ready</div>
             </div>
         </div>
         <div id="road-scene" class="road-scene">
@@ -813,9 +850,16 @@
       ];
 
       const GRID_USA = 5, GRID_KIDS = 4;
+      const GAME_STATE_KEY = 'licensePlateBingo.gameState.v1';
+      const gameConfigs = {
+        usa: { items: stateNames, gridSize: GRID_USA, isColorGame: false },
+        east: { items: eastStates, gridSize: GRID_USA, isColorGame: false },
+        kids: { items: colors, gridSize: GRID_KIDS, isColorGame: true }
+      };
       let score = 0;
       let achievedPatterns = new Set();
       let achievedPatternKeys = new Set();
+      let currentGameType = 'usa';
       let currentIsColorGame = false;
       let currentGridSize = GRID_USA;
       let currentBoardLookup = {};
@@ -825,6 +869,7 @@
       let freePicksRemaining = null;
       let allowProgrammaticMark = false;
       let roadDifficulty = 'normal';
+      let isRestoringState = false;
 
       const roadSceneEl = document.getElementById('road-scene');
       const roadWatchStatusEl = document.getElementById('road-watch-status');
@@ -872,6 +917,8 @@
       const roadMusicAudio = document.getElementById('road-music-audio');
       const confettiCanvas = document.getElementById('confetti-canvas');
       const freePickButton = document.getElementById('free-pick');
+      const roadWatchEl = document.getElementById('road-watch');
+      const gameTypeButtons = document.querySelectorAll('.game-type-buttons [data-game-type]');
 
       function syncRoadMusicState() {
         const shouldPlay = musicToggle.checked && roadWatchRunning && !currentIsColorGame;
@@ -918,8 +965,83 @@
         });
       }
 
+      function updateGameTypeControls() {
+        gameTypeButtons.forEach(button => {
+          const isActive = button.dataset.gameType === currentGameType;
+          button.classList.toggle('active', isActive);
+          button.setAttribute('aria-pressed', String(isActive));
+        });
+        roadWatchEl.classList.toggle('is-disabled', currentIsColorGame);
+        roadWatchDifficultyEl.disabled = currentIsColorGame;
+        updateRoadWatchButton();
+      }
+
+      function saveGameState() {
+        if (isRestoringState || !bingoBoardEl.children.length) return;
+        const cells = Array.from(bingoBoardEl.querySelectorAll('.bingo-cell')).map(cell => ({
+          item: cell.dataset.item || 'PLACEHOLDER_EMPTY',
+          marked: cell.dataset.item === 'FREEPLAY' || cell.classList.contains('marked'),
+          freePickMarked: cell.classList.contains('free-pick-marked')
+        }));
+        const state = {
+          version: 1,
+          gameType: currentGameType,
+          cells,
+          score,
+          achievedPatterns: Array.from(achievedPatterns),
+          achievedPatternKeys: Array.from(achievedPatternKeys),
+          roadDifficulty,
+          soundEnabled: soundToggle.checked,
+          musicEnabled: musicToggle.checked
+        };
+        try {
+          localStorage.setItem(GAME_STATE_KEY, JSON.stringify(state));
+        } catch (error) {
+          console.warn('Unable to save the current game.', error);
+        }
+      }
+
+      function restoreGameState() {
+        try {
+          const savedState = JSON.parse(localStorage.getItem(GAME_STATE_KEY));
+          const config = savedState && gameConfigs[savedState.gameType];
+          const expectedCells = config ? config.gridSize * config.gridSize : 0;
+          const allowedItems = config
+            ? new Set([...(config.isColorGame ? config.items : Object.keys(config.items)), 'FREEPLAY', 'PLACEHOLDER_EMPTY'])
+            : new Set();
+          const hasValidCells = Array.isArray(savedState?.cells)
+            && savedState.cells.length === expectedCells
+            && savedState.cells.every(cell => cell && allowedItems.has(cell.item));
+          if (savedState?.version !== 1 || !config || !hasValidCells) {
+            return false;
+          }
+
+          soundToggle.checked = savedState.soundEnabled !== false;
+          musicToggle.checked = savedState.musicEnabled !== false;
+          if (roadDifficultySettings[savedState.roadDifficulty]) {
+            roadDifficulty = savedState.roadDifficulty;
+            roadWatchDifficultyEl.value = roadDifficulty;
+          }
+
+          isRestoringState = true;
+          startGameType(savedState.gameType, { savedState });
+          isRestoringState = false;
+          saveGameState();
+          return true;
+        } catch (error) {
+          isRestoringState = false;
+          console.warn('Unable to restore the saved game.', error);
+          return false;
+        }
+      }
+
       function updateFreePickButton() {
-        if (roadWatchRunning && !currentIsColorGame) {
+        if (currentIsColorGame) {
+          freePickButton.textContent = 'Free Pick';
+          freePickButton.disabled = true;
+          freePickButton.style.opacity = '0.6';
+          freePickButton.style.cursor = 'not-allowed';
+        } else if (roadWatchRunning) {
           const remaining = freePicksRemaining ?? 0;
           freePickButton.textContent = `Free Pick (${remaining})`;
           freePickButton.disabled = remaining <= 0;
@@ -993,6 +1115,13 @@
       }
 
       function updateRoadWatchButton() {
+        if (currentIsColorGame) {
+          roadWatchToggleEl.textContent = 'Unavailable';
+          roadWatchToggleEl.disabled = true;
+          roadWatchToggleEl.classList.remove('stop');
+          return;
+        }
+        roadWatchToggleEl.disabled = false;
         roadWatchToggleEl.textContent = roadWatchRunning ? 'Stop' : 'Start';
         roadWatchToggleEl.classList.toggle('stop', roadWatchRunning);
       }
@@ -1097,6 +1226,11 @@
       }
 
       function startRoadWatch() {
+        if (currentIsColorGame) {
+          stopRoadWatch();
+          updateRoadWatchStatus('Road Watch is disabled in Kid Colors.');
+          return;
+        }
         if (roadWatchTimer) clearInterval(roadWatchTimer);
         roadWatchRunning = true;
         freePicksRemaining = 3;
@@ -1280,7 +1414,7 @@
         nearWinMessageEl.classList.toggle('has-message', displayHints.length > 0);
       }
 
-      function checkBingo() {
+      function checkBingo({ celebrate = true } = {}) {
         const allVisualCells = document.querySelectorAll('#bingo-board .bingo-cell:not(.bonus-cell)');
         const fullBoardState = Array.from(allVisualCells).map(cell => cell.classList.contains('marked'));
 
@@ -1317,7 +1451,7 @@
         bingoMessageEl.classList.toggle('has-message', allAchievedPatternNames.length > 0);
         updateNearWinHints(currentPatterns, fullBoardState);
 
-        if (newWinningPatternTypes.length > 0) {
+        if (newWinningPatternTypes.length > 0 && celebrate) {
           playWinnerCelebration(newWinningPatternTypes.length);
           startConfetti(confettiCanvas);
           setTimeout(() => stopConfetti(confettiCanvas), 3000);
@@ -1344,26 +1478,30 @@
         return newWinningPatternTypes.length > 0;
       }
 
-      function generateBoard(items, gridSize, isColorGame = false) {
+      function generateBoard(items, gridSize, isColorGame = false, { savedState = null } = {}) {
         currentIsColorGame = isColorGame;
         currentGridSize = gridSize;
         currentBoardLookup = isColorGame ? {} : items;
         resetGameState();
+        updateGameTypeControls();
 
         bingoBoardEl.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
         bingoBoardEl.innerHTML = '';
 
         const boardSize = gridSize * gridSize;
         let finalBoardItems = [];
-        let sourceItemsPool = shuffle(isColorGame ? items : Object.keys(items));
-
-        if (!isColorGame && gridSize > 0 && gridSize % 2 !== 0) {
-            const itemsToPick = boardSize - 1;
-            finalBoardItems = sourceItemsPool.slice(0, itemsToPick);
-            const middleIndex = Math.floor(boardSize / 2);
-            finalBoardItems.splice(middleIndex, 0, "FREEPLAY_MARKER");
+        if (savedState) {
+          finalBoardItems = savedState.cells.map(cell => cell.item === 'FREEPLAY' ? 'FREEPLAY_MARKER' : cell.item);
         } else {
-            finalBoardItems = sourceItemsPool.slice(0, boardSize);
+          const sourceItemsPool = shuffle(isColorGame ? items : Object.keys(items));
+          if (!isColorGame && gridSize > 0 && gridSize % 2 !== 0) {
+              const itemsToPick = boardSize - 1;
+              finalBoardItems = sourceItemsPool.slice(0, itemsToPick);
+              const middleIndex = Math.floor(boardSize / 2);
+              finalBoardItems.splice(middleIndex, 0, "FREEPLAY_MARKER");
+          } else {
+              finalBoardItems = sourceItemsPool.slice(0, boardSize);
+          }
         }
 
         while (finalBoardItems.length < boardSize) {
@@ -1373,12 +1511,14 @@
         for (let i = 0; i < boardSize; i++) {
             const cell = document.createElement('button');
             cell.className = 'bingo-cell';
+            cell.type = 'button';
 
             const currentItem = finalBoardItems[i];
 
             if (currentItem === "PLACEHOLDER_EMPTY") {
                 cell.innerHTML = `<div class="cell-name">N/A</div>`;
                 cell.disabled = true;
+                cell.setAttribute('aria-label', 'Unavailable square');
                 cell.style.cursor = "default";
                 cell.style.backgroundColor = "#f8f9fa";
             } else if (isColorGame) {
@@ -1386,24 +1526,32 @@
                 cell.style.backgroundColor = currentItem.toLowerCase(); // Set the color cell's background
                 cell.innerHTML = `<div class="cell-name">${currentItem}</div>`;
                 cell.dataset.item = currentItem;
+                cell.setAttribute('aria-label', currentItem);
+                cell.setAttribute('aria-pressed', 'false');
             } else if (currentItem === "FREEPLAY_MARKER") {
-                cell.classList.add('marked');
+                cell.classList.add('marked', 'free-space');
                 cell.innerHTML = `<div class="cell-name free-play-text">Free Play</div>`;
                 cell.dataset.item = "FREEPLAY";
+                cell.setAttribute('aria-label', 'Free Play, automatically marked');
+                cell.setAttribute('aria-pressed', 'true');
+                cell.setAttribute('aria-disabled', 'true');
             } else {
                 const stateName = items[currentItem] || "Unknown";
                 cell.innerHTML = `<img src="images/${currentItem}.png" alt="${stateName}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.marginTop='auto';">
                                   <div class="cell-name">${stateName}</div>`;
                 cell.dataset.item = currentItem;
+                cell.setAttribute('aria-label', stateName);
+                cell.setAttribute('aria-pressed', 'false');
                 fitCellLabel(cell.querySelector('.cell-name'), stateName);
             }
 
-            if (!cell.disabled) {
+            if (!cell.disabled && cell.dataset.item !== 'FREEPLAY') {
               cell.addEventListener('click', () => {
-                if (!allowProgrammaticMark && roadWatchRunning && !currentIsColorGame && cell.dataset.item !== 'FREEPLAY' && !cell.classList.contains('road-watch-target')) {
+                if (!allowProgrammaticMark && roadWatchRunning && !currentIsColorGame && !cell.classList.contains('road-watch-target')) {
                   return;
                 }
                 cell.classList.toggle('marked');
+                cell.setAttribute('aria-pressed', String(cell.classList.contains('marked')));
                 if (!cell.classList.contains('marked')) {
                   cell.classList.remove('free-pick-marked');
                 }
@@ -1412,22 +1560,47 @@
                 if (!hadNewWin) {
                   playSoundEffect(clickAudio, 0.5);
                 }
+                saveGameState();
               });
             }
             bingoBoardEl.appendChild(cell);
         }
 
-        if (!isColorGame && gridSize > 0 && gridSize % 2 !== 0) {
-             checkBingo();
+        if (savedState) {
+          Array.from(bingoBoardEl.querySelectorAll('.bingo-cell')).forEach((cell, index) => {
+            const savedCell = savedState.cells[index];
+            const shouldBeMarked = cell.dataset.item === 'FREEPLAY' || Boolean(savedCell?.marked);
+            cell.classList.toggle('marked', shouldBeMarked);
+            cell.classList.toggle('free-pick-marked', Boolean(savedCell?.freePickMarked) && cell.dataset.item !== 'FREEPLAY');
+            if (cell.dataset.item !== 'FREEPLAY' && !cell.disabled) {
+              cell.setAttribute('aria-pressed', String(shouldBeMarked));
+            }
+          });
+          achievedPatterns = new Set((savedState.achievedPatterns || []).filter(name => patternPoints[name] !== undefined));
+          achievedPatternKeys = new Set(savedState.achievedPatternKeys || []);
+          score = Number.isFinite(savedState.score) && savedState.score >= 0 ? savedState.score : 0;
+          scoreEl.textContent = `Score: ${score}`;
+          checkBingo({ celebrate: false });
+        } else if (!isColorGame && gridSize > 0 && gridSize % 2 !== 0) {
+          checkBingo({ celebrate: false });
         }
+        updateFreePickButton();
+        updateBoardInteractionLock();
+        saveGameState();
       }
 
-      document.getElementById('usa-game').onclick = () => generateBoard(stateNames, GRID_USA);
-      document.getElementById('east-coast-game').onclick = () => generateBoard(eastStates, GRID_USA);
-      document.getElementById('kid-colors-game').onclick = () => generateBoard(colors, GRID_KIDS, true);
+      function startGameType(gameType, options = {}) {
+        const config = gameConfigs[gameType] || gameConfigs.usa;
+        currentGameType = gameConfigs[gameType] ? gameType : 'usa';
+        generateBoard(config.items, config.gridSize, config.isColorGame, options);
+      }
+
+      document.getElementById('usa-game').onclick = () => startGameType('usa');
+      document.getElementById('east-coast-game').onclick = () => startGameType('east');
+      document.getElementById('kid-colors-game').onclick = () => startGameType('kids');
 
       document.getElementById('generate-board').onclick = () => {
-        generateBoard(stateNames, GRID_USA);
+        startGameType(currentGameType);
       };
 
       document.getElementById('free-pick').onclick = () => {
@@ -1455,6 +1628,7 @@
           freePicksRemaining = Math.max(0, (freePicksRemaining ?? 0) - 1);
           updateFreePickButton();
         }
+        saveGameState();
       };
 
       let confettiAnimationId = null;
@@ -1502,6 +1676,7 @@
           roadWatchTimer = setInterval(triggerRoadReveal, currentRoadDifficultySettings().intervalMs);
           updateRoadWatchStatus(`${currentRoadDifficultySettings().label} mode — cruising…`);
         }
+        saveGameState();
       });
 
       roadWatchToggleEl.addEventListener('click', () => {
@@ -1515,9 +1690,11 @@
         if (!soundToggle.checked) {
           stopSoundEffects();
         }
+        saveGameState();
       });
       musicToggle.addEventListener('change', () => {
         syncRoadMusicState();
+        saveGameState();
       });
 
       // --- Help Modal ---
@@ -1548,7 +1725,9 @@
       updateFreePickButton();
       updateBoardInteractionLock();
       animateRoadCars();
-      generateBoard(stateNames, GRID_USA);
+      if (!restoreGameState()) {
+        startGameType('usa');
+      }
     });
 </script>
     <div id="help-modal" class="help-modal" role="dialog" aria-modal="true" aria-label="Game Instructions">
@@ -1571,6 +1750,10 @@
                 </div>
                 <div class="help-section">
                     <h3>Playing the Board</h3>
+                    <div class="help-game-type">
+                        <h4>Passengers Only</h4>
+                        <p>Do not play while driving. A passenger should operate the game and watch for plates.</p>
+                    </div>
                     <div class="help-game-type">
                         <h4>Spot a Plate</h4>
                         <p>Look for license plates on cars around you: passing traffic, parking lots, rest stops, or cars you pass on the road.</p>
